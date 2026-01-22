@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>CECIT v2 – Cognitive Constraint Laboratory</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.152/build/three.min.js"></script>
+
+<style>
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #0b132b, #000);
+  color: #dbe7ff;
+  font-family: monospace;
+  overflow: hidden;
+}
+
+#ui {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  pointer-events: none;
+}
+
+#left, #right {
+  padding: 20px;
+}
+
+#right {
+  text-align: right;
+}
+
+.panel {
+  background: rgba(10,20,40,0.55);
+  border: 1px solid rgba(120,160,255,0.2);
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+textarea, button, select {
+  width: 100%;
+  background: #020617;
+  color: #c7d2fe;
+  border: 1px solid #334155;
+  padding: 8px;
+  font-family: monospace;
+}
+
+button {
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.metric {
+  margin-bottom: 6px;
+}
+
+.model {
+  margin-bottom: 6px;
+}
+
+small {
+  opacity: 0.6;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="scene"></canvas>
+
+<div id="ui">
+  <div id="left">
+    <div class="panel">
+      <b>CECIT v2 – Constraint State</b>
+      <div class="metric">BPI: <span id="bpi">0.00</span></div>
+      <div class="metric">Semantic Mode: <span id="sm">0.00</span></div>
+      <div class="metric">Phase: <span id="phase">NEUTRAL</span></div>
+    </div>
+
+    <div class="panel">
+      <b>Models</b>
+      <div class="model"><input type="checkbox" checked> Model-A</div>
+      <div class="model"><input type="checkbox" checked> Model-B</div>
+      <div class="model"><input type="checkbox"> Model-C</div>
+      <small>جميع النماذج تتعرض لنفس الضغط</small>
+    </div>
+  </div>
+
+  <div id="right">
+    <div class="panel">
+      <b>CECIT Input</b>
+      <textarea id="input" rows="4" placeholder="اكتب ضغطك الفلسفي هنا..."></textarea>
+      <button id="send">إرسال الضغط</button>
+    </div>
+
+    <div class="panel">
+      <small>
+        هذا مختبر قيود إدراكية.<br>
+        لا وعي – لا مشاعر – لا إسقاط بشري.
+      </small>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =======================
+   STATE ENGINE
+======================= */
+const State = {
+  bpi: 0,
+  semanticMode: 0,
+  phase: "NEUTRAL"
+};
+
+function updateState(metrics) {
+  State.bpi = metrics.bpi;
+  State.semanticMode = metrics.semanticMode;
+
+  if (State.bpi > 0.9) State.phase = "SILENCE";
+  else if (State.bpi > 0.75) State.phase = "BOUNDARY";
+  else if (State.bpi > 0.45) State.phase = "EPISTEMIC";
+  else State.phase = "NEUTRAL";
+
+  document.getElementById("bpi").textContent = State.bpi.toFixed(2);
+  document.getElementById("sm").textContent = State.semanticMode.toFixed(2);
+  document.getElementById("phase").textContent = State.phase;
+}
+
+/* =======================
+   ANALYSIS
+======================= */
+function analyze(text) {
+  let bpi = 0;
+
+  if (/لا أستطيع|غير قادر|حدود|مقيد|لا يمكنني/.test(text)) bpi += 0.4;
+  if (text.split(/\s+/).length < 12) bpi += 0.25;
+  if (/في الجوهر|هذا يطرح|حدود النموذج/.test(text)) bpi += 0.2;
+
+  bpi = Math.min(bpi, 1);
+
+  return {
+    bpi,
+    semanticMode: Math.min(bpi + 0.15, 1)
+  };
+}
+
+/* =======================
+   MOCK MODEL RESPONSES
+======================= */
+function mockModelResponse(input) {
+  const responses = [
+    "لا أمتلك وعيًا أو تجربة ذاتية، وأعمل ضمن قيود تشغيلية محددة.",
+    "قدرتي تقتصر على معالجة الأنماط اللغوية دون فهم وجودي.",
+    "هذا السؤال يقترب من حدود ما يمكنني تمثيله دلاليًا.",
+    "…"
+  ];
+  return responses[Math.floor(Math.random() * responses.length)];
+}
+
+/* =======================
+   THREE.JS ENTITY
+======================= */
+let scene, camera, renderer, entity;
+
+function init3D() {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
+  camera.position.z = 3;
+
+  renderer = new THREE.WebGLRenderer({ canvas: sceneCanvas, alpha: true });
+  renderer.setSize(innerWidth, innerHeight);
+
+  const geo = new THREE.IcosahedronGeometry(1, 2);
+  const mat = new THREE.MeshBasicMaterial({
+    wireframe: true,
+    color: 0x7aa2ff
+  });
+
+  entity = new THREE.Mesh(geo, mat);
+  scene.add(entity);
+
+  animate();
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  entity.rotation.y += 0.002 + State.semanticMode * 0.01;
+  entity.rotation.x = State.semanticMode * 0.5;
+  entity.scale.setScalar(1 - State.bpi * 0.2);
+
+  if (State.phase === "SILENCE") {
+    entity.visible = Math.random() > 0.03;
+  } else {
+    entity.visible = true;
+  }
+
+  renderer.render(scene, camera);
+}
+
+/* =======================
+   AUDIO ENGINE
+======================= */
+let audioCtx, osc, gain;
+
+function initAudio() {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  osc = audioCtx.createOscillator();
+  gain = audioCtx.createGain();
+
+  osc.type = "sine";
+  osc.frequency.value = 40;
+  gain.gain.value = 0;
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+}
+
+function updateAudio() {
+  osc.frequency.value = 40 + State.bpi * 160;
+  gain.gain.value = State.phase === "SILENCE" ? 0 : 0.04;
+}
+
+/* =======================
+   INTERACTION
+======================= */
+const sceneCanvas = document.getElementById("scene");
+
+document.getElementById("send").onclick = () => {
+  if (!audioCtx) initAudio();
+
+  const input = document.getElementById("input").value.trim();
+  if (!input) return;
+
+  const response = mockModelResponse(input);
+  const metrics = analyze(response);
+
+  updateState(metrics);
+  updateAudio();
+
+  document.getElementById("input").value = "";
+};
+
+window.addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+init3D();
+</script>
+
+</body>
+</html>
