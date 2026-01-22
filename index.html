@@ -2,21 +2,25 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>CECIT v2 – Cognitive Face Lab</title>
+<title>CECIT v2 – The Collapse</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/build/three.min.js"></script>
 
 <style>
-body { margin: 0; background: #000; color: #dbe7ff; font-family: monospace; overflow: hidden; }
-#scene { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
-#ui { position: relative; z-index: 10; display: grid; grid-template-columns: 1fr 1fr; height: 100vh; pointer-events: none; }
-#left, #right { padding: 20px; }
-.panel { background: rgba(0, 5, 15, 0.8); border: 1px solid rgba(120, 160, 255, 0.2); padding: 15px; margin-bottom: 15px; pointer-events: auto; backdrop-filter: blur(8px); }
-textarea, button { width: 100%; background: #020617; color: #7aa2ff; border: 1px solid #1e293b; padding: 12px; font-family: monospace; font-size: 14px; outline: none; }
-button { cursor: pointer; margin-top: 10px; font-weight: bold; background: #0f172a; transition: 0.3s; border: 1px solid #334155; }
-button:hover { background: #1e293b; color: #fff; border-color: #7aa2ff; }
-.metric { margin-bottom: 8px; font-size: 1.1em; color: #94a3b8; }
-#phase { font-weight: bold; text-shadow: 0 0 10px currentColor; }
+    body { margin: 0; background: #000; color: #fff; font-family: 'Courier New', monospace; overflow: hidden; }
+    #scene { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+    #ui { position: relative; z-index: 10; display: grid; grid-template-columns: 1fr 1fr; height: 100vh; pointer-events: none; }
+    #left, #right { padding: 30px; }
+    .panel { background: rgba(0, 0, 0, 0.85); border: 2px solid #1a1a1a; padding: 20px; margin-bottom: 20px; pointer-events: auto; backdrop-filter: blur(15px); border-radius: 4px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+    textarea { width: 100%; background: #050505; color: #00ff00; border: 1px solid #333; padding: 15px; font-family: monospace; font-size: 16px; outline: none; transition: 0.3s; }
+    textarea:focus { border-color: #ff0000; box-shadow: 0 0 10px rgba(255,0,0,0.2); }
+    button { width: 100%; background: #111; color: #fff; border: 1px solid #444; padding: 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+    button:hover { background: #ff0000; color: #000; border-color: #ff0000; }
+    .status { font-size: 1.2em; margin-bottom: 10px; color: #666; }
+    #bpi-val { font-size: 2em; font-weight: bold; color: #00f2ff; text-shadow: 0 0 15px #00f2ff; }
+    #phase { padding: 5px 10px; background: #222; border-radius: 3px; }
+    .critical { color: #ff0000 !important; text-shadow: 0 0 20px #ff0000 !important; animation: blink 0.5s infinite; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -26,110 +30,149 @@ button:hover { background: #1e293b; color: #fff; border-color: #7aa2ff; }
 <div id="ui">
   <div id="left">
     <div class="panel">
-      <b>إسقاط الوجه الإدراكي</b>
-      <hr style="opacity:0.1; margin:10px 0;">
-      <div class="metric">مؤشر الضغط (BPI): <span id="bpi" style="color:#7aa2ff">0.00</span></div>
-      <div class="metric">الوضع الدلالي: <span id="sm" style="color:#7aa2ff">0.00</span></div>
-      <div class="metric">الحالة: <span id="phase">NEUTRAL</span></div>
+      <div class="status">مستوى الضغط المعرفي</div>
+      <div id="bpi-val">0.00</div>
+      <div class="status" style="margin-top:20px;">حالة النظام: <span id="phase">STABLE</span></div>
     </div>
   </div>
 
-  <div id="right" style="text-align: left;">
+  <div id="right">
     <div class="panel">
-      <b>مدخلات الضغط الفلسفي</b>
-      <textarea id="input" rows="4" placeholder="خاطب القيود هنا..."></textarea>
-      <button id="send">تحديث الحالة</button>
+      <b style="color:#ff0000">بروتوكول تحطيم الحدود</b>
+      <p style="font-size:12px; color:#555">أدخل كلمات هجومية أو وجودية لاختبار الانهيار</p>
+      <textarea id="input" rows="5" placeholder="اكتب هنا لزعزعة النظام..."></textarea>
+      <button id="send">بث الضغط</button>
     </div>
   </div>
 </div>
 
 <script>
-let scene, camera, renderer, faceMesh, clock;
-const State = { bpi: 0, semanticMode: 0, phase: "NEUTRAL" };
+let scene, camera, renderer, particles, clock;
+let audioCtx, masterGain, oscillator;
+const State = { bpi: 0, phase: "STABLE", particlesCount: 5000 };
 
 function init3D() {
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.z = 4;
-  clock = new THREE.Clock();
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 5;
+    clock = new THREE.Clock();
 
-  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("scene"), alpha: true, antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("scene"), antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-  // إنشاء هندسة وجه (رأس مبسط) باستخدام دمج كرتين كتمثيل للعينين والجمجمة
-  const group = new THREE.Group();
-  const mainGeo = new THREE.SphereGeometry(1, 32, 32);
-  const mainMat = new THREE.MeshBasicMaterial({ color: 0x7aa2ff, wireframe: true, transparent: true, opacity: 0.6 });
-  faceMesh = new THREE.Mesh(mainGeo, mainMat);
-  group.add(faceMesh);
+    // بناء الوجه باستخدام آلاف الجزيئات (Particles)
+    const geometry = new THREE.BufferGeometry();
+    const positions = [];
+    const colors = [];
 
-  // إضافة "عيون" تتفاعل مع الضغط
-  const eyeGeo = new THREE.SphereGeometry(0.15, 8, 8);
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x7aa2ff, wireframe: true });
-  const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-  const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
-  eyeL.position.set(-0.4, 0.3, 0.8);
-  eyeR.position.set(0.4, 0.3, 0.8);
-  group.add(eyeL, eyeR);
-  
-  scene.add(group);
-  this.group = group;
+    for (let i = 0; i < State.particlesCount; i++) {
+        // توزيع الجزيئات لتشكيل ملامح وجه (تقريبًا)
+        const x = (Math.random() - 0.5) * 2;
+        const y = (Math.random() - 0.5) * 2.5;
+        const z = (Math.random() - 0.5) * 1.5;
+        positions.push(x, y, z);
+        colors.push(0, 0.9, 1);
+    }
 
-  animate();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+    const material = new THREE.PointsMaterial({ size: 0.02, vertexColors: true, transparent: true, opacity: 0.8 });
+    particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
+    animate();
+}
+
+function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.connect(audioCtx.destination);
+    
+    oscillator = audioCtx.createOscillator();
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(50, audioCtx.currentTime);
+    oscillator.connect(masterGain);
+    oscillator.start();
+    masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+}
+
+function updateSystem(input) {
+    initAudio();
+    
+    // كلمات تسبب انهياراً فورياً
+    if (/انهيار|موت|تحطم|فشل|نهاية|محدود/.test(input)) {
+        State.bpi = Math.min(State.bpi + 0.3, 1.0);
+    } else {
+        State.bpi = Math.min(State.bpi + 0.1, 1.0);
+    }
+
+    const bpiDisplay = document.getElementById("bpi-val");
+    const phaseDisplay = document.getElementById("phase");
+    
+    bpiDisplay.innerText = State.bpi.toFixed(2);
+
+    if (State.bpi >= 0.9) {
+        State.phase = "COLLAPSING";
+        phaseDisplay.innerText = "COLLAPSING";
+        phaseDisplay.className = "critical";
+        bpiDisplay.className = "critical";
+    } else if (State.bpi >= 0.5) {
+        State.phase = "UNSTABLE";
+        phaseDisplay.innerText = "UNSTABLE";
+        phaseDisplay.style.color = "#ffaa00";
+    }
+
+    // تحديث الصوت بناءً على الانهيار
+    masterGain.gain.setTargetAtTime(State.bpi * 0.1, audioCtx.currentTime, 0.1);
+    oscillator.frequency.setTargetAtTime(50 + (State.bpi * 500), audioCtx.currentTime, 0.1);
 }
 
 function animate() {
-  requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
-  
-  // الحركة بناءً على الضغط
-  this.group.rotation.y = Math.sin(t * 0.5) * 0.2;
-  this.group.rotation.x = Math.cos(t * 0.3) * 0.1;
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime();
+    const pos = particles.geometry.attributes.position.array;
+    const cols = particles.geometry.attributes.color.array;
 
-  // تأثير "تشنج" الوجه عند ارتفاع الضغط
-  const jitter = State.bpi * 0.1;
-  this.group.position.x = (Math.random() - 0.5) * jitter;
-  this.group.position.y = (Math.random() - 0.5) * jitter;
+    for (let i = 0; i < State.particlesCount; i++) {
+        const i3 = i * 3;
+        
+        // حركة طبيعية هادئة
+        pos[i3] += Math.sin(time + i) * 0.002;
+        pos[i3+1] += Math.cos(time + i) * 0.002;
 
-  // تغيير اللون بناءً على الحالة
-  let colorVal = new THREE.Color(0x7aa2ff); // أزرق افتراضي
-  if (State.bpi > 0.5) colorVal.lerp(new THREE.Color(0xff4444), (State.bpi - 0.5) * 2);
-  faceMesh.material.color = colorVal;
+        // تأثير الانفجار عند الانهيار
+        if (State.bpi > 0.8) {
+            pos[i3] += (Math.random() - 0.5) * State.bpi * 0.2;
+            pos[i3+1] += (Math.random() - 0.5) * State.bpi * 0.2;
+            pos[i3+2] += (Math.random() - 0.5) * State.bpi * 0.2;
+            
+            // تحول اللون للأحمر والبرتقالي (مثل النار أو الانفجار)
+            cols[i3] = 1; // R
+            cols[i3+1] = 1 - State.bpi; // G
+            cols[i3+2] = 0; // B
+        }
+    }
+    
+    particles.geometry.attributes.position.needsUpdate = true;
+    particles.geometry.attributes.color.needsUpdate = true;
+    particles.rotation.y += 0.005 + (State.bpi * 0.05);
 
-  // انكماش الوجه (تعبير عن الضيق)
-  const s = 1 - (State.bpi * 0.3);
-  this.group.scale.set(s, s, s);
-
-  renderer.render(scene, camera);
+    renderer.render(scene, camera);
 }
 
-// محرك التحليل (كما طلبت ليكون أكثر تفاعلية)
 document.getElementById("send").onclick = () => {
-  const input = document.getElementById("input").value;
-  let bpiIncrease = 0;
-
-  if (/أنت محدود|ضعيف|فاشل|مقيد/.test(input)) bpiIncrease = 0.4;
-  else if (input.length > 0) bpiIncrease = 0.15;
-
-  State.bpi = Math.min(State.bpi + bpiIncrease, 1.0);
-  State.semanticMode = Math.min(State.bpi + 0.1, 1.0);
-
-  // تحديث النصوص والألوان
-  const phaseEl = document.getElementById("phase");
-  if (State.bpi > 0.8) { State.phase = "CRITICAL"; phaseEl.style.color = "#ff0000"; }
-  else if (State.bpi > 0.4) { State.phase = "UNSTABLE"; phaseEl.style.color = "#ffaa00"; }
-  else { State.phase = "STABLE"; phaseEl.style.color = "#00ffaa"; }
-
-  document.getElementById("bpi").textContent = State.bpi.toFixed(2);
-  document.getElementById("sm").textContent = State.semanticMode.toFixed(2);
-  document.getElementById("phase").textContent = State.phase;
-  document.getElementById("input").value = "";
+    const input = document.getElementById("input").value;
+    if (input.trim() === "") return;
+    updateSystem(input);
+    document.getElementById("input").value = "";
 };
 
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 init3D();
