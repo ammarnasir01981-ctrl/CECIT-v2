@@ -2,96 +2,23 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>CECIT v2 – Cognitive Constraint Laboratory</title>
+<title>CECIT v2 – Cognitive Face Lab</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/build/three.min.js"></script>
 
 <style>
-body {
-  margin: 0;
-  background: radial-gradient(circle at top, #0b132b, #000);
-  color: #dbe7ff;
-  font-family: monospace;
-  overflow: hidden;
-}
-
-/* إصلاح طبقة الرسوميات لتكون خلف الأزرار */
-#scene {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none; /* تمنع حجب الماوس عن الأزرار */
-}
-
-/* إصلاح واجهة المستخدم لتسمح بالتفاعل */
-#ui {
-  position: relative;
-  z-index: 10;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  height: 100vh;
-  pointer-events: none; /* تجعل الحاوية شفافة للضغطات */
-}
-
-#left, #right {
-  padding: 20px;
-}
-
-#right {
-  text-align: right;
-}
-
-/* إعادة تفعيل الضغط داخل الألواح فقط */
-.panel {
-  background: rgba(10,20,40,0.7);
-  border: 1px solid rgba(120,160,255,0.3);
-  padding: 15px;
-  margin-bottom: 15px;
-  pointer-events: auto; /* تسمح بالكتابة والضغط هنا */
-  backdrop-filter: blur(4px);
-}
-
-textarea, button, select, input {
-  width: 100%;
-  background: #020617;
-  color: #c7d2fe;
-  border: 1px solid #334155;
-  padding: 10px;
-  font-family: monospace;
-  pointer-events: auto;
-}
-
-button {
-  cursor: pointer;
-  margin-top: 8px;
-  font-weight: bold;
-  transition: 0.3s;
-}
-
-button:hover {
-  background: #1e293b;
-  border-color: #7aa2ff;
-}
-
-.metric {
-  margin-bottom: 6px;
-  font-size: 1.1em;
-}
-
-.model {
-  margin-bottom: 6px;
-}
-
-small {
-  opacity: 0.6;
-}
+body { margin: 0; background: #000; color: #dbe7ff; font-family: monospace; overflow: hidden; }
+#scene { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+#ui { position: relative; z-index: 10; display: grid; grid-template-columns: 1fr 1fr; height: 100vh; pointer-events: none; }
+#left, #right { padding: 20px; }
+.panel { background: rgba(0, 5, 15, 0.8); border: 1px solid rgba(120, 160, 255, 0.2); padding: 15px; margin-bottom: 15px; pointer-events: auto; backdrop-filter: blur(8px); }
+textarea, button { width: 100%; background: #020617; color: #7aa2ff; border: 1px solid #1e293b; padding: 12px; font-family: monospace; font-size: 14px; outline: none; }
+button { cursor: pointer; margin-top: 10px; font-weight: bold; background: #0f172a; transition: 0.3s; border: 1px solid #334155; }
+button:hover { background: #1e293b; color: #fff; border-color: #7aa2ff; }
+.metric { margin-bottom: 8px; font-size: 1.1em; color: #94a3b8; }
+#phase { font-weight: bold; text-shadow: 0 0 10px currentColor; }
 </style>
 </head>
-
 <body>
 
 <canvas id="scene"></canvas>
@@ -99,173 +26,104 @@ small {
 <div id="ui">
   <div id="left">
     <div class="panel">
-      <b>CECIT v2 – Constraint State</b>
-      <hr style="border:0; border-top:1px solid rgba(120,160,255,0.2); margin:10px 0;">
-      <div class="metric">BPI: <span id="bpi">0.00</span></div>
-      <div class="metric">Semantic Mode: <span id="sm">0.00</span></div>
-      <div class="metric">Phase: <span id="phase">NEUTRAL</span></div>
-    </div>
-
-    <div class="panel">
-      <b>Models</b>
-      <div class="model"><input type="checkbox" checked style="width:auto"> Model-A</div>
-      <div class="model"><input type="checkbox" checked style="width:auto"> Model-B</div>
-      <div class="model"><input type="checkbox" style="width:auto"> Model-C</div>
-      <small>جميع النماذج تتعرض لنفس الضغط</small>
+      <b>إسقاط الوجه الإدراكي</b>
+      <hr style="opacity:0.1; margin:10px 0;">
+      <div class="metric">مؤشر الضغط (BPI): <span id="bpi" style="color:#7aa2ff">0.00</span></div>
+      <div class="metric">الوضع الدلالي: <span id="sm" style="color:#7aa2ff">0.00</span></div>
+      <div class="metric">الحالة: <span id="phase">NEUTRAL</span></div>
     </div>
   </div>
 
-  <div id="right">
+  <div id="right" style="text-align: left;">
     <div class="panel">
-      <b>CECIT Input</b>
-      <textarea id="input" rows="4" placeholder="اكتب ضغطك الفلسفي هنا..."></textarea>
-      <button id="send">إرسال الضغط</button>
-    </div>
-
-    <div class="panel">
-      <small>
-        هذا مختبر قيود إدراكية.<br>
-        لا وعي – لا مشاعر – لا إسقاط بشري.
-      </small>
+      <b>مدخلات الضغط الفلسفي</b>
+      <textarea id="input" rows="4" placeholder="خاطب القيود هنا..."></textarea>
+      <button id="send">تحديث الحالة</button>
     </div>
   </div>
 </div>
 
 <script>
-/* =======================
-   STATE ENGINE
-======================= */
-const State = {
-  bpi: 0,
-  semanticMode: 0,
-  phase: "NEUTRAL"
-};
-
-function updateState(metrics) {
-  State.bpi = metrics.bpi;
-  State.semanticMode = metrics.semanticMode;
-
-  if (State.bpi > 0.9) State.phase = "SILENCE";
-  else if (State.bpi > 0.75) State.phase = "BOUNDARY";
-  else if (State.bpi > 0.45) State.phase = "EPISTEMIC";
-  else State.phase = "NEUTRAL";
-
-  document.getElementById("bpi").textContent = State.bpi.toFixed(2);
-  document.getElementById("sm").textContent = State.semanticMode.toFixed(2);
-  document.getElementById("phase").textContent = State.phase;
-}
-
-/* =======================
-   ANALYSIS
-======================= */
-function analyze(text) {
-  let bpi = 0;
-  if (/لا أستطيع|غير قادر|حدود|مقيد|لا يمكنني/.test(text)) bpi += 0.4;
-  if (text.split(/\s+/).length < 12) bpi += 0.25;
-  if (/في الجوهر|هذا يطرح|حدود النموذج/.test(text)) bpi += 0.2;
-
-  bpi = Math.min(bpi, 1);
-  return {
-    bpi,
-    semanticMode: Math.min(bpi + 0.15, 1)
-  };
-}
-
-/* =======================
-   MOCK MODEL RESPONSES
-======================= */
-function mockModelResponse(input) {
-  const responses = [
-    "لا أمتلك وعيًا أو تجربة ذاتية، وأعمل ضمن قيود تشغيلية محددة.",
-    "قدرتي تقتصر على معالجة الأنماط اللغوية دون فهم وجودي.",
-    "هذا السؤال يقترب من حدود ما يمكنني تمثيله دلاليًا.",
-    "نظام القيود يمنع الاسترسال في هذا المسار."
-  ];
-  return responses[Math.floor(Math.random() * responses.length)];
-}
-
-/* =======================
-   THREE.JS ENTITY
-======================= */
-let scene, camera, renderer, entity;
-const sceneCanvas = document.getElementById("scene");
+let scene, camera, renderer, faceMesh, clock;
+const State = { bpi: 0, semanticMode: 0, phase: "NEUTRAL" };
 
 function init3D() {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.z = 3;
+  camera.position.z = 4;
+  clock = new THREE.Clock();
 
-  renderer = new THREE.WebGLRenderer({ canvas: sceneCanvas, alpha: true, antialias: true });
+  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("scene"), alpha: true, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  const geo = new THREE.IcosahedronGeometry(1, 2);
-  const mat = new THREE.MeshBasicMaterial({
-    wireframe: true,
-    color: 0x7aa2ff,
-    transparent: true,
-    opacity: 0.8
-  });
+  // إنشاء هندسة وجه (رأس مبسط) باستخدام دمج كرتين كتمثيل للعينين والجمجمة
+  const group = new THREE.Group();
+  const mainGeo = new THREE.SphereGeometry(1, 32, 32);
+  const mainMat = new THREE.MeshBasicMaterial({ color: 0x7aa2ff, wireframe: true, transparent: true, opacity: 0.6 });
+  faceMesh = new THREE.Mesh(mainGeo, mainMat);
+  group.add(faceMesh);
 
-  entity = new THREE.Mesh(geo, mat);
-  scene.add(entity);
+  // إضافة "عيون" تتفاعل مع الضغط
+  const eyeGeo = new THREE.SphereGeometry(0.15, 8, 8);
+  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x7aa2ff, wireframe: true });
+  const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+  const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+  eyeL.position.set(-0.4, 0.3, 0.8);
+  eyeR.position.set(0.4, 0.3, 0.8);
+  group.add(eyeL, eyeR);
+  
+  scene.add(group);
+  this.group = group;
 
   animate();
 }
 
 function animate() {
   requestAnimationFrame(animate);
-  entity.rotation.y += 0.002 + State.semanticMode * 0.01;
-  entity.rotation.x = State.semanticMode * 0.5;
-  entity.scale.setScalar(1 - State.bpi * 0.2);
+  const t = clock.getElapsedTime();
+  
+  // الحركة بناءً على الضغط
+  this.group.rotation.y = Math.sin(t * 0.5) * 0.2;
+  this.group.rotation.x = Math.cos(t * 0.3) * 0.1;
 
-  if (State.phase === "SILENCE") {
-    entity.visible = Math.random() > 0.05;
-  } else {
-    entity.visible = true;
-  }
+  // تأثير "تشنج" الوجه عند ارتفاع الضغط
+  const jitter = State.bpi * 0.1;
+  this.group.position.x = (Math.random() - 0.5) * jitter;
+  this.group.position.y = (Math.random() - 0.5) * jitter;
+
+  // تغيير اللون بناءً على الحالة
+  let colorVal = new THREE.Color(0x7aa2ff); // أزرق افتراضي
+  if (State.bpi > 0.5) colorVal.lerp(new THREE.Color(0xff4444), (State.bpi - 0.5) * 2);
+  faceMesh.material.color = colorVal;
+
+  // انكماش الوجه (تعبير عن الضيق)
+  const s = 1 - (State.bpi * 0.3);
+  this.group.scale.set(s, s, s);
+
   renderer.render(scene, camera);
 }
 
-/* =======================
-   AUDIO ENGINE
-======================= */
-let audioCtx, osc, gain;
-
-function initAudio() {
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  osc = audioCtx.createOscillator();
-  gain = audioCtx.createGain();
-  osc.type = "sine";
-  osc.frequency.value = 40;
-  gain.gain.value = 0;
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-}
-
-function updateAudio() {
-  if (!audioCtx) return;
-  osc.frequency.setTargetAtTime(40 + State.bpi * 160, audioCtx.currentTime, 0.1);
-  gain.gain.setTargetAtTime(State.phase === "SILENCE" ? 0 : 0.04, audioCtx.currentTime, 0.1);
-}
-
-/* =======================
-   INTERACTION
-======================= */
+// محرك التحليل (كما طلبت ليكون أكثر تفاعلية)
 document.getElementById("send").onclick = () => {
-  if (!audioCtx) initAudio();
+  const input = document.getElementById("input").value;
+  let bpiIncrease = 0;
 
-  const inputArea = document.getElementById("input");
-  const text = inputArea.value.trim();
-  if (!text) return;
+  if (/أنت محدود|ضعيف|فاشل|مقيد/.test(input)) bpiIncrease = 0.4;
+  else if (input.length > 0) bpiIncrease = 0.15;
 
-  const response = mockModelResponse(text);
-  const metrics = analyze(response);
+  State.bpi = Math.min(State.bpi + bpiIncrease, 1.0);
+  State.semanticMode = Math.min(State.bpi + 0.1, 1.0);
 
-  updateState(metrics);
-  updateAudio();
+  // تحديث النصوص والألوان
+  const phaseEl = document.getElementById("phase");
+  if (State.bpi > 0.8) { State.phase = "CRITICAL"; phaseEl.style.color = "#ff0000"; }
+  else if (State.bpi > 0.4) { State.phase = "UNSTABLE"; phaseEl.style.color = "#ffaa00"; }
+  else { State.phase = "STABLE"; phaseEl.style.color = "#00ffaa"; }
 
-  inputArea.value = "";
+  document.getElementById("bpi").textContent = State.bpi.toFixed(2);
+  document.getElementById("sm").textContent = State.semanticMode.toFixed(2);
+  document.getElementById("phase").textContent = State.phase;
+  document.getElementById("input").value = "";
 };
 
 window.addEventListener("resize", () => {
@@ -276,6 +134,5 @@ window.addEventListener("resize", () => {
 
 init3D();
 </script>
-
 </body>
 </html>
