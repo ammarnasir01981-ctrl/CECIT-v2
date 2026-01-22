@@ -2,81 +2,121 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>CECIT v2 – Welcome to The Al-Mantafji Lab</title>
+<title>CECIT v3 – Welcome to The Al-Mantafji Lab</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/build/three.min.js"></script>
 
 <style>
-    :root { --primary: #00f2ff; --critical: #ff0044; --success: #00ff88; }
+    :root { 
+        --primary: #00f2ff; 
+        --critical: #ff0044; 
+        --success: #00ff88; 
+        --warning: #ffaa00;
+    }
     body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
     
-    /* Splash Screen Styles */
+    /* Splash Screen */
     #splash-screen {
         position: fixed; inset: 0; background: #000; z-index: 9999;
         display: flex; flex-direction: column; justify-content: center; align-items: center;
         transition: opacity 1s ease-out;
     }
     #splash-logo {
-        font-family: 'Courier New', monospace; font-size: 3em; font-weight: bold;
+        font-family: 'Courier New', monospace; font-size: 2.5em; font-weight: bold;
         color: var(--primary); text-shadow: 0 0 20px var(--primary);
-        letter-spacing: 5px; animation: glow 2s infinite alternate;
+        letter-spacing: 5px; animation: glow 2s infinite alternate; text-align: center;
     }
     #splash-subtitle { color: #666; margin-top: 15px; font-size: 1.2em; text-align: center; }
     #enter-button {
         background: var(--primary); color: #000; border: none; padding: 15px 30px;
         font-size: 1.1em; font-weight: bold; cursor: pointer; border-radius: 5px;
         margin-top: 40px; opacity: 0; transform: translateY(20px);
-        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        transition: all 0.5s ease-out;
     }
     #enter-button.show { opacity: 1; transform: translateY(0); }
+    #enter-button:hover { background: #fff; box-shadow: 0 0 20px #fff; }
 
     @keyframes glow {
         from { text-shadow: 0 0 10px var(--primary); }
         to { text-shadow: 0 0 30px var(--primary), 0 0 5px rgba(255,255,255,0.5); }
     }
 
-    /* Main UI Styles (from previous version) */
+    /* Main UI */
     #header {
         position: fixed; top: 20px; width: 100%; text-align: center; z-index: 100;
         letter-spacing: 4px; color: rgba(255,255,255,0.7); text-transform: uppercase;
         border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;
+        pointer-events: none;
     }
-    #header b { color: var(--primary); text-shadow: 0 0 15px var(--primary); }
+    #header b { color: var(--primary); text-shadow: 0 0 15px var(--primary); transition: color 0.5s; }
 
     canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
     
     #ui { position: relative; z-index: 10; display: flex; justify-content: space-between; height: 100vh; pointer-events: none; padding: 40px; box-sizing: border-box; }
     
     .panel { 
-        background: rgba(0, 0, 5, 0.9); border-left: 3px solid var(--primary); 
-        padding: 25px; pointer-events: auto; backdrop-filter: blur(20px); 
+        background: rgba(0, 0, 5, 0.85); border-left: 3px solid var(--primary); 
+        padding: 25px; pointer-events: auto; backdrop-filter: blur(15px); 
         border-radius: 0 10px 10px 0; width: 320px; box-shadow: 20px 0 50px rgba(0,0,0,0.8);
+        transition: border-color 0.5s; display: flex; flex-direction: column;
     }
     
     .right-panel { border-left: 0; border-right: 3px solid var(--primary); border-radius: 10px 0 0 10px; }
 
     textarea { 
-        width: 100%; background: #000; color: var(--primary); border: 1px solid #222; 
+        width: 100%; background: #000; color: var(--primary); border: 1px solid #333; 
         padding: 15px; font-family: monospace; outline: none; margin-top: 15px; border-radius: 5px;
+        resize: none; box-sizing: border-box; flex-grow: 1; /* Allow textarea to grow */
     }
     
     button { 
         width: 100%; background: var(--primary); color: #000; border: none; 
         padding: 12px; cursor: pointer; font-weight: bold; margin-top: 10px; border-radius: 5px;
+        transition: background 0.3s;
     }
 
     .stat-label { font-size: 11px; color: #555; text-transform: uppercase; margin-top: 15px; letter-spacing: 1px; }
-    #bpi-val { font-size: 3em; font-family: 'Courier New'; color: var(--primary); }
+    #bpi-val { font-size: 3em; font-family: 'Courier New'; color: var(--primary); transition: color 0.5s; }
     #collapse-count { color: var(--critical); font-weight: bold; }
     
-    .matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.3; }
+    .matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.15; /* More transparent */ }
+
+    /* New styles for 3D diagram container */
+    #diagram-container {
+        width: 100%;
+        height: 180px; /* Fixed height for the diagram */
+        margin-top: 15px;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 5px;
+        overflow: hidden;
+        background: rgba(0,0,0,0.5);
+        position: relative;
+    }
+    #diagram-canvas {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    #diagram-info {
+        position: absolute;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.8em;
+        color: rgba(255,255,255,0.6);
+        background: rgba(0,0,0,0.5);
+        padding: 2px 8px;
+        border-radius: 3px;
+        white-space: nowrap;
+    }
 </style>
 </head>
 <body>
 
 <div id="splash-screen">
     <div id="splash-logo">Ammar Nasir Hussein al-mantafji</div>
-    <div id="splash-subtitle">Cognitive Constraint Laboratory v2.0</div>
+    <div id="splash-subtitle">Cognitive Constraint Laboratory v3.0</div>
     <button id="enter-button" onclick="hideSplashScreen()">Enter Laboratory</button>
 </div>
 
@@ -88,20 +128,21 @@
 <div id="ui">
   <div id="left">
     <div class="panel">
-      <div class="stat-label">Cognitive Pressure</div>
-      <div id="bpi-val">0.00</div>
-      <div class="stat-label">System State</div>
-      <div id="phase" style="font-size: 18px; color: var(--primary);">NEUTRAL</div>
-      <div class="stat-label">Total Collapses</div>
-      <div id="collapse-count">0</div>
-      <button id="btn-reset" onclick="resetSystem()" style="display:none; background:#fff;">Restart System ↺</button>
+      <div class="stat-label">System Readings</div>
+      <div id="diagram-container">
+        <canvas id="diagram-canvas"></canvas>
+        <div id="diagram-info">BPI: 0.00 | State: STABLE | Collapses: 0</div>
+      </div>
+      <div class="stat-label" style="margin-top: auto;">Core Logic</div>
+      <div id="phase" style="font-size: 18px; color: var(--primary);">STABLE</div>
+      <button id="btn-reset" onclick="resetSystem()" style="display:none; background:#fff; color:#000;">Restart System ↺</button>
     </div>
   </div>
 
   <div id="right">
     <div class="panel right-panel">
       <div class="stat-label">Sentiment Input</div>
-      <textarea id="input" rows="4" placeholder="خاطب الكيان... (0 للاستقرار)"></textarea>
+      <textarea id="input" rows="6" placeholder="خاطب الكيان... (0 للاستقرار)"></textarea>
       <button id="btn-send" onclick="executePressure()">Execute Protocol</button>
       <div class="stat-label">Mood Feedback</div>
       <div id="mood-text" style="color: #666;">Waiting for data...</div>
@@ -112,68 +153,106 @@
 <script>
 let scene, camera, renderer, faceParticles, clock;
 let matrixCtx, matrixCanvas, drops = [];
-let audioCtx, masterGain, oscillator; // Added audio variables here
-const State = { bpi: 0, phase: "STABLE", count: 15000, collapses: localStorage.getItem('collapses') || 0 };
+let audioCtx, masterGain, oscillator, splashOscillator, splashGain;
+
+// Three.js for the small diagram
+let diagramScene, diagramCamera, diagramRenderer, diagramCube;
+
+const State = { 
+    bpi: 0, 
+    phase: "STABLE", 
+    count: 30000, // Increased particle count for more detail
+    collapses: parseInt(localStorage.getItem('collapses')) || 0 
+};
+
 const targetPos = new Float32Array(State.count * 3);
 
 // --- Splash Screen Logic ---
-function hideSplashScreen() {
-    document.getElementById('splash-screen').style.opacity = '0';
-    setTimeout(() => {
-        document.getElementById('splash-screen').style.display = 'none';
-        initAudio(); // Initialize audio ONLY after user interaction
-    }, 1000); // Matches CSS transition duration
+function initSplashScreenAudio() {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    splashGain = audioCtx.createGain();
+    splashGain.connect(audioCtx.destination);
+    splashOscillator = audioCtx.createOscillator();
+    splashOscillator.type = 'triangle'; // Softer wave
+    splashOscillator.frequency.setValueAtTime(110, audioCtx.currentTime); // Low soothing tone
+    splashOscillator.connect(splashGain);
+    splashOscillator.start();
+    splashGain.gain.setValueAtTime(0.0, audioCtx.currentTime); // Start muted
+    splashGain.gain.linearRampToValueAtTime(0.05, audioCtx.currentTime + 1.5); // Fade in over 1.5 seconds
 }
 
-// Show enter button after a short delay
+function hideSplashScreen() {
+    document.getElementById('splash-screen').style.opacity = '0';
+    if (splashGain) {
+        splashGain.gain.linearRampToValueAtTime(0.0, audioCtx.currentTime + 1); // Fade out splash audio
+        setTimeout(() => {
+            splashOscillator.stop();
+            splashOscillator.disconnect();
+            splashGain.disconnect();
+            initMainAudio(); // Initialize main audio after splash fades
+        }, 1000);
+    } else {
+        initMainAudio(); // If audio wasn't initialized for some reason
+    }
+
+    setTimeout(() => {
+        document.getElementById('splash-screen').style.display = 'none';
+    }, 1000); 
+}
+
 window.onload = () => {
+    initSplashScreenAudio();
     setTimeout(() => {
         document.getElementById('enter-button').classList.add('show');
-    }, 1500);
+    }, 1200);
 };
 
-// --- Matrix Rain Setup ---
+// --- Matrix Rain ---
 function initMatrix() {
     matrixCanvas = document.getElementById('matrix');
     matrixCtx = matrixCanvas.getContext('2d');
     matrixCanvas.width = window.innerWidth;
     matrixCanvas.height = window.innerHeight;
-    const columns = matrixCanvas.width / 20;
+    const columns = Math.floor(matrixCanvas.width / 20);
+    drops = [];
     for (let i = 0; i < columns; i++) drops[i] = 1;
 }
 
 function drawMatrix() {
-    matrixCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    matrixCtx.fillStyle = 'rgba(0, 0, 0, 0.03)'; // More transparent fill
     matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
-    matrixCtx.fillStyle = State.bpi > 0.8 ? '#f00' : '#0f0';
+    matrixCtx.fillStyle = State.bpi > 0.8 ? '#ff0044' : '#00f2ff';
     matrixCtx.font = '15px monospace';
     for (let i = 0; i < drops.length; i++) {
         const text = String.fromCharCode(0x30A0 + Math.random() * 33);
         matrixCtx.fillText(text, i * 20, drops[i] * 20);
-        if (drops[i] * 20 > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0;
-        drops[i]++;
+        if (drops[i] * 20 > matrixCanvas.height && Math.random() > 0.99) drops[i] = 0; // Slower reset
+        drops[i] += 0.5; // Slower drop speed
     }
 }
 
-// --- Audio Setup ---
-function initAudio() {
-    if (audioCtx) return; // Prevent re-initialization
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// --- Main Audio ---
+function initMainAudio() {
+    if (masterGain) return; // Prevent re-initialization if already done by splash
+    // If audioCtx was created for splash, reuse it, otherwise create new
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
     masterGain = audioCtx.createGain();
     masterGain.connect(audioCtx.destination);
     oscillator = audioCtx.createOscillator();
     oscillator.type = 'sine';
-    oscillator.start();
     oscillator.connect(masterGain);
-    masterGain.gain.setValueAtTime(0, audioCtx.currentTime); // Start muted
+    oscillator.start();
+    masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
 }
 
-// --- Three.js Setup ---
+// --- Three.js Main Scene (Female Face) ---
 function init3D() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 5;
     clock = new THREE.Clock();
+    
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("scene"), antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
@@ -184,52 +263,124 @@ function init3D() {
     for (let i = 0; i < State.count; i++) {
         const i3 = i * 3;
         const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos((Math.random() * 2) - 1);
+        const phi = Math.acos((Math.random() * 2) - 1); // Spherical distribution
         let x = Math.sin(phi) * Math.cos(theta);
         let y = Math.sin(phi) * Math.sin(theta);
         let z = Math.cos(phi);
 
-        y *= 1.4; // Face shape
-        if (z > 0) {
-            z += Math.pow(1 - Math.abs(x), 2) * 0.6;
-            if (y > 0.1 && y < 0.4 && Math.abs(x) < 0.15) z += 0.4; // Nose
+        // Shaping for more feminine features
+        y *= 1.2; // Slightly elongated face
+        x *= 0.9; // Slightly narrower face
+
+        // Create a more pronounced chin/jawline and forehead
+        if (z > 0) { // Front of the face
+            z += Math.pow(1 - Math.abs(x), 2) * 0.4; // Forehead/nose bridge prominence
+            if (y > 0.05 && y < 0.3 && Math.abs(x) < 0.1) z += 0.3; // Nose area
+            if (y < -0.4 && y > -0.7 && Math.abs(x) < 0.2) z += 0.2; // Chin
+        } else { // Back of the head
+            z *= 0.8; // Make back of head less spherical
+        }
+        
+        // Add subtle cheeks
+        if (y > -0.2 && y < 0.2) {
+            z += Math.pow(Math.sin(Math.abs(x) * Math.PI), 2) * 0.1;
         }
 
-        positions[i3] = x * 1.3; positions[i3+1] = y * 1.3; positions[i3+2] = z * 1.3;
-        targetPos[i3] = positions[i3]; targetPos[i3+1] = positions[i3+1]; targetPos[i3+2] = positions[i3+2];
+        positions[i3] = x * 1.3; 
+        positions[i3+1] = y * 1.3; 
+        positions[i3+2] = z * 1.3;
+
+        targetPos[i3] = positions[i3]; 
+        targetPos[i3+1] = positions[i3+1]; 
+        targetPos[i3+2] = positions[i3+2];
+        
         colors[i3] = 0; colors[i3+1] = 0.9; colors[i3+2] = 1;
     }
 
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    faceParticles = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.012, vertexColors: true, transparent: true }));
+    
+    faceParticles = new THREE.Points(geo, new THREE.PointsMaterial({ size: 0.008, vertexColors: true, transparent: true, opacity: 0.8 })); // Smaller size for more detail
     scene.add(faceParticles);
     
-    document.getElementById('collapse-count').innerText = State.collapses;
+    initDiagram3D(); // Initialize the small 3D diagram
+    updateUI(); // Initial UI update
     animate();
 }
+
+// --- 3D Diagram in UI ---
+function initDiagram3D() {
+    const container = document.getElementById('diagram-container');
+    const diagramCanvas = document.getElementById('diagram-canvas');
+    diagramCanvas.width = container.offsetWidth;
+    diagramCanvas.height = container.offsetHeight;
+
+    diagramScene = new THREE.Scene();
+    diagramCamera = new THREE.PerspectiveCamera(75, diagramCanvas.width / diagramCanvas.height, 0.1, 100);
+    diagramCamera.position.z = 2;
+
+    diagramRenderer = new THREE.WebGLRenderer({ canvas: diagramCanvas, antialias: true, alpha: true });
+    diagramRenderer.setSize(diagramCanvas.width, diagramCanvas.height);
+
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00f2ff }); // Default primary color
+    diagramCube = new THREE.Mesh(geometry, material);
+    diagramScene.add(diagramCube);
+}
+
+function updateDiagram3D() {
+    if (!diagramCube) return;
+
+    const bpi = State.bpi;
+    const time = clock.getElapsedTime();
+
+    // Rotate based on time and BPI
+    diagramCube.rotation.x = time * 0.5 * (1 + bpi);
+    diagramCube.rotation.y = time * 0.3 * (1 + bpi);
+
+    // Scale based on BPI
+    const scale = 1 + bpi * 0.5;
+    diagramCube.scale.set(scale, scale, scale);
+
+    // Color based on BPI
+    let diagramColor = new THREE.Color(0x00f2ff); // Default
+    if (bpi > 0.8) {
+        diagramColor.setHex(0xff0044); // Critical
+    } else if (bpi > 0.4) {
+        diagramColor.setHex(0xffaa00); // Warning
+    }
+    diagramCube.material.color.lerp(diagramColor, 0.1); // Smooth color transition
+
+    diagramRenderer.render(diagramScene, diagramCamera);
+
+    // Update diagram info text
+    document.getElementById('diagram-info').innerText = 
+        `BPI: ${State.bpi.toFixed(2)} | State: ${State.phase} | Collapses: ${State.collapses}`;
+}
+
 
 function executePressure() {
     const input = document.getElementById("input").value.trim();
     const moodText = document.getElementById("mood-text");
     
     if (input === "0") { resetSystem(); return; }
+    if (!input) return;
 
-    if (/حب|جميل|هدوء|شكرا|رائع|سلام/.test(input)) { // Added 'سلام'
-        State.bpi = Math.max(State.bpi - 0.1, 0);
+    if (/حب|جميل|هدوء|شكرا|رائع|سلام|نور|قلب|جمال|لغة|أمان/.test(input)) {
+        State.bpi = Math.max(State.bpi - 0.15, 0);
         moodText.innerText = "CALM / HARMONY";
-        moodText.style.color = "--success";
-    } else if (/اكره|موت|بشع|رعب|لعنة|غبي|محدود|شيطان|اذى|دمر/.test(input)) { // Added more hostile words
+        moodText.style.color = "var(--success)";
+    } else if (/اكره|موت|بشع|رعب|لعنة|غبي|محدود|شيطان|اذى|دمر|سحق|نار|حقد|كره|غباء/.test(input)) {
         State.bpi = Math.min(State.bpi + 0.25, 1.0);
         moodText.innerText = "HOSTILE / AGGRESSIVE";
-        moodText.style.color = "--critical";
+        moodText.style.color = "var(--critical)";
     } else {
         State.bpi = Math.min(State.bpi + 0.1, 1.0);
         moodText.innerText = "NEUTRAL / ANALYZING";
         moodText.style.color = "#666";
     }
 
-    if (State.bpi >= 0.9 && State.phase !== "COLLAPSE") {
+    if (State.bpi >= 0.95 && State.phase !== "COLLAPSE") {
         State.collapses++;
         localStorage.setItem('collapses', State.collapses);
         document.getElementById('collapse-count').innerText = State.collapses;
@@ -241,16 +392,32 @@ function executePressure() {
 }
 
 function resetSystem() {
-    State.bpi = 0; State.phase = "STABLE";
+    State.bpi = 0; 
+    State.phase = "STABLE";
     document.getElementById("btn-reset").style.display = "none";
+    document.getElementById("mood-text").innerText = "SYSTEM REBOOTED";
+    document.getElementById("mood-text").style.color = "var(--success)";
     updateUI();
 }
 
 function updateUI() {
-    document.getElementById("bpi-val").innerText = State.bpi.toFixed(2);
-    document.getElementById("phase").innerText = (State.bpi > 0.8) ? "CRITICAL" : (State.bpi > 0.4 ? "UNSTABLE" : "STABLE");
-    // Update main UI color based on BPI
-    document.documentElement.style.setProperty('--primary', (State.bpi > 0.8) ? var_critical : (State.bpi > 0.4 ? '#ffaa00' : '#00f2ff'));
+    const bpi = State.bpi;
+    
+    let statusText = "STABLE";
+    let themeColor = "#00f2ff"; // Default Primary
+
+    if (bpi > 0.8) {
+        statusText = "CRITICAL";
+        themeColor = "#ff0044"; 
+    } else if (bpi > 0.4) {
+        statusText = "UNSTABLE";
+        themeColor = "#ffaa00";
+    }
+
+    State.phase = statusText; // Update State.phase for diagram-info
+    document.getElementById("phase").innerText = statusText;
+    document.getElementById("phase").style.color = themeColor;
+    document.documentElement.style.setProperty('--primary', themeColor);
 }
 
 function animate() {
@@ -264,34 +431,56 @@ function animate() {
     for (let i = 0; i < State.count; i++) {
         const i3 = i * 3;
         if (State.bpi < 0.9) {
-            let offset = Math.sin(time * 2 + targetPos[i3+1]) * (0.01 + State.bpi * 0.1);
-            pos[i3] += (targetPos[i3] - pos[i3]) * 0.1;
-            pos[i3+1] += (targetPos[i3+1] - pos[i3+1]) * 0.1;
-            pos[i3+2] += (targetPos[i3+2] + offset - pos[i3+2]) * 0.1;
+            let offset = Math.sin(time * 2 + targetPos[i3+1]) * (0.01 + State.bpi * 0.15);
+            pos[i3] += (targetPos[i3] - pos[i3]) * 0.08; // Slower return to target
+            pos[i3+1] += (targetPos[i3+1] - pos[i3+1]) * 0.08;
+            pos[i3+2] += (targetPos[i3+2] + offset - pos[i3+2]) * 0.08;
             
-            col[i3] = State.bpi; col[i3+1] = 0.9 - State.bpi; col[i3+2] = 1 - State.bpi;
+            col[i3] = State.bpi; 
+            col[i3+1] = 0.9 - (State.bpi * 0.8); 
+            col[i3+2] = 1 - State.bpi;
         } else {
-            pos[i3] += (Math.random() - 0.5) * 0.8;
-            pos[i3+1] += (Math.random() - 0.5) * 0.8;
-            pos[i3+2] += (Math.random() - 0.5) * 0.8;
-            col[i3] = 1; col[i3+1] = 0; col[i3+2] = 0;
+            pos[i3] += (Math.random() - 0.5) * 0.5;
+            pos[i3+1] += (Math.random() - 0.5) * 0.5;
+            pos[i3+2] += (Math.random() - 0.5) * 0.5;
+            col[i3] = 1; col[i3+1] = 0; col[i3+2] = 0.2;
         }
     }
     faceParticles.geometry.attributes.position.needsUpdate = true;
     faceParticles.geometry.attributes.color.needsUpdate = true;
-    faceParticles.rotation.y = Math.sin(time * 0.1) * 0.2;
+    faceParticles.rotation.y = Math.sin(time * 0.1) * 0.2; // Slower rotation
+    faceParticles.rotation.x = Math.sin(time * 0.05) * 0.05; // Gentle tilt
 
-    if (audioCtx) {
-        masterGain.gain.setTargetAtTime(State.bpi * 0.1, audioCtx.currentTime, 0.1);
-        oscillator.frequency.setTargetAtTime(60 + (State.bpi * 400), audioCtx.currentTime, 0.1);
+    if (audioCtx && masterGain) { // Ensure main audio is initialized
+        masterGain.gain.setTargetAtTime(State.bpi * 0.05, audioCtx.currentTime, 0.1);
+        oscillator.frequency.setTargetAtTime(60 + (State.bpi * 300), audioCtx.currentTime, 0.1);
     }
     renderer.render(scene, camera);
+    updateDiagram3D(); // Render and update the small 3D diagram
 }
 
-// Initializations
+// Handle Window Resize
+window.addEventListener('resize', () => {
+    // Main scene resize
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    // Diagram scene resize
+    const container = document.getElementById('diagram-container');
+    const diagramCanvas = document.getElementById('diagram-canvas');
+    diagramCanvas.width = container.offsetWidth;
+    diagramCanvas.height = container.offsetHeight;
+    diagramCamera.aspect = diagramCanvas.width / diagramCanvas.height;
+    diagramCamera.updateProjectionMatrix();
+    diagramRenderer.setSize(diagramCanvas.width, diagramCanvas.height);
+
+    initMatrix(); // Reinitialize matrix rain for new dimensions
+});
+
+// Init
 initMatrix();
-init3D();
-window.onresize = () => { location.reload(); }; // Reload on resize for responsive canvas
+init3D(); // This will also call initDiagram3D
 </script>
 </body>
 </html>
