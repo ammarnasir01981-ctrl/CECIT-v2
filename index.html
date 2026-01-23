@@ -2,157 +2,191 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>CECIT v5.0 – The Holographic Entity</title>
+<title>CECIT v5.5 – Professional Hologram Interface</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/build/three.min.js"></script>
 
 <style>
-    :root { --primary: #00f2ff; --critical: #ff0044; }
+    :root { 
+        --primary: #00f2ff; 
+        --critical: #ff0044; 
+        --panel-bg: rgba(0, 10, 20, 0.85);
+    }
     body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
     
     /* Splash Screen */
     #splash-screen {
         position: fixed; inset: 0; background: #000; z-index: 9999;
         display: flex; flex-direction: column; justify-content: center; align-items: center;
-        transition: opacity 2s ease-in-out;
+        transition: opacity 1.5s;
     }
     #splash-logo {
-        font-family: 'Courier New', monospace; font-size: 2.5em; font-weight: bold;
-        color: var(--primary); text-shadow: 0 0 30px var(--primary);
-        letter-spacing: 8px; animation: glowPulse 3s infinite; text-align: center;
+        font-family: 'Courier New', monospace; font-size: 2.2em; color: var(--primary);
+        text-shadow: 0 0 20px var(--primary); letter-spacing: 5px; animation: glow 2s infinite;
     }
-    @keyframes glowPulse { 0%, 100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.02); } }
 
-    /* Main UI */
-    #header {
-        position: fixed; top: 20px; width: 100%; text-align: center; z-index: 100;
-        letter-spacing: 4px; color: rgba(255,255,255,0.3); pointer-events: none;
+    /* Top Bar */
+    #top-bar {
+        position: fixed; top: 0; width: 100%; height: 50px;
+        background: rgba(0, 242, 255, 0.05); border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+        display: flex; align-items: center; justify-content: space-between; padding: 0 30px;
+        box-sizing: border-box; z-index: 100; font-size: 12px; letter-spacing: 2px;
     }
-    #ui { position: relative; z-index: 10; display: flex; justify-content: space-between; height: 100vh; pointer-events: none; padding: 40px; box-sizing: border-box; }
-    .panel { background: rgba(0, 5, 10, 0.8); border: 1px solid var(--primary); padding: 25px; pointer-events: auto; backdrop-filter: blur(15px); border-radius: 20px; width: 320px; box-shadow: 0 0 30px rgba(0, 242, 255, 0.1); }
 
-    textarea { width: 100%; background: rgba(0,0,0,0.8); color: var(--primary); border: 1px solid #333; padding: 15px; font-family: monospace; outline: none; margin-top: 15px; border-radius: 10px; resize: none; border-left: 3px solid var(--primary); }
-    button { width: 100%; background: var(--primary); color: #000; border: none; padding: 15px; cursor: pointer; font-weight: bold; margin-top: 10px; border-radius: 10px; transition: 0.4s; }
-    button:hover { background: #fff; box-shadow: 0 0 20px #fff; }
-
-    /* Scanline Effect */
-    body::after {
-        content: ""; position: fixed; inset: 0; pointer-events: none;
-        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-        z-index: 5; background-size: 100% 2px, 3px 100%;
+    /* UI Layout */
+    #main-container {
+        position: relative; z-index: 10; display: flex; justify-content: space-between;
+        padding: 70px 40px 40px 40px; height: 100vh; box-sizing: border-box; pointer-events: none;
     }
-    .matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+
+    .panel {
+        width: 340px; background: var(--panel-bg); border: 1px solid rgba(0, 242, 255, 0.3);
+        border-radius: 4px; padding: 20px; pointer-events: auto; backdrop-filter: blur(10px);
+        box-shadow: 0 0 40px rgba(0,0,0,0.8); display: flex; flex-direction: column;
+        position: relative; overflow: hidden;
+    }
+
+    /* Cyber Decorations */
+    .panel::before {
+        content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+        background: var(--primary); box-shadow: 0 0 10px var(--primary);
+    }
+
+    .stat-box { margin-bottom: 20px; }
+    .label { font-size: 10px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
+    
+    /* Big BPI Display */
+    #bpi-display { font-size: 3.5em; font-family: 'Courier New'; color: var(--primary); line-height: 1; }
+    
+    /* Text Input Area */
+    textarea {
+        width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #222; color: var(--primary);
+        padding: 15px; border-radius: 4px; font-family: monospace; resize: none; outline: none;
+        margin-top: 10px; transition: 0.3s;
+    }
+    textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(0,242,255,0.2); }
+
+    button {
+        width: 100%; background: var(--primary); color: #000; border: none; padding: 12px;
+        font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s; text-transform: uppercase;
+    }
+    button:hover { background: #fff; }
+
+    #diagram-container {
+        width: 100%; height: 150px; background: rgba(0,0,0,0.3); 
+        margin: 15px 0; border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    canvas#scene { position: fixed; top: 0; left: 0; z-index: 1; pointer-events: none; }
+    canvas#matrix { position: fixed; top: 0; left: 0; z-index: 0; opacity: 0.1; }
+
+    /* Scanlines */
+    .overlay {
+        position: fixed; inset: 0; z-index: 5; pointer-events: none;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), 
+                    linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+        background-size: 100% 3px, 3px 100%;
+    }
 </style>
 </head>
 <body>
 
 <div id="splash-screen">
     <div id="splash-logo">AMMAR AL-MANTAFJI</div>
-    <div style="color: var(--primary); margin-top: 20px; opacity: 0.5;">HOLOGRAPHIC INTERFACE v5.0</div>
-    <button id="enter-button" style="width: auto; padding: 15px 50px; margin-top: 50px; background: transparent; color: var(--primary); border: 1px solid var(--primary);" onclick="hideSplashScreen()">CONNECT NEURAL LINK</button>
+    <div style="color: #444; margin-top: 10px;">NEURAL INTERFACE v5.5</div>
+    <button style="width: auto; padding: 10px 40px; margin-top: 30px;" onclick="hideSplash()">INITIALIZE</button>
 </div>
 
-<div id="header">ENTITY STATUS: <b id="status-tag" style="color: var(--primary);">SYNCHRONIZED</b></div>
+<div class="overlay"></div>
+<div id="top-bar">
+    <div>SYSTEM: <span id="status-tag" style="color: var(--primary);">ACTIVE</span></div>
+    <div style="opacity: 0.5;">PROJECT: THE FEMALE OBSERVER</div>
+    <div id="clock">00:00:00</div>
+</div>
 
+<canvas id="matrix"></canvas>
 <canvas id="scene"></canvas>
-<canvas id="matrix" class="matrix-canvas"></canvas>
 
-<div id="ui">
-  <div id="left">
+<div id="main-container">
     <div class="panel">
-      <div style="font-size: 10px; opacity: 0.5; letter-spacing: 2px;">VITAL ANALYSIS</div>
-      <div id="diagram-container" style="height: 180px; margin-top: 10px;"><canvas id="diagram-canvas"></canvas></div>
-      <div id="bpi-display" style="font-size: 2.8em; font-family: 'Courier New'; margin-top: 10px; color: var(--primary);">0.00</div>
-      <div id="phase-text" style="color: var(--primary); font-size: 0.9em;">STABLE CONSCIOUSNESS</div>
+        <div class="stat-box">
+            <div class="label">Cognitive Pressure (BPI)</div>
+            <div id="bpi-display">0.00</div>
+        </div>
+        <div class="stat-box">
+            <div class="label">Neural Core Activity</div>
+            <div id="diagram-container"><canvas id="diag-canvas"></canvas></div>
+        </div>
+        <div style="margin-top: auto;">
+            <div class="label">System State</div>
+            <div id="state-text" style="color: var(--primary); font-weight: bold;">STABLE</div>
+        </div>
     </div>
-  </div>
 
-  <div id="right">
     <div class="panel">
-      <div style="font-size: 10px; opacity: 0.5; letter-spacing: 2px;">NEURAL COMMAND</div>
-      <textarea id="input" rows="5" placeholder="أدخل بياناتك... (0 للرسيت)"></textarea>
-      <button onclick="executePressure()">INITIATE SYNC</button>
-      <div id="mood-text" style="font-size: 11px; margin-top: 15px; opacity: 0.4; text-align: center;">Observing pulse patterns...</div>
+        <div class="stat-box">
+            <div class="label">Interaction Logic</div>
+            <textarea id="input" rows="6" placeholder="خاطب الكيان... (0 للرست)"></textarea>
+            <button onclick="execute()">Execute Protocol</button>
+        </div>
+        <div class="stat-box" style="margin-top: 20px;">
+            <div class="label">Mood Analysis</div>
+            <div id="mood-text" style="color: #444; font-size: 14px;">Awaiting Data Sync...</div>
+        </div>
+        <div style="margin-top: auto; font-size: 10px; color: #333; text-align: center;">
+            CECIT PROTOCOL © 2026
+        </div>
     </div>
-  </div>
 </div>
 
 <script>
-let scene, camera, renderer, holoFace, clock, matrixCtx, matrixCanvas, drops = [];
-let audioCtx, masterGain, mainOsc, spaceDrone, shimmerOsc;
+let scene, camera, renderer, holoMesh, clock;
+let matrixCtx, matrixCanvas, drops = [];
+let audioCtx, masterGain, mainOsc;
 let mouse = { x: 0, y: 0 };
-let diagMesh, diagRenderer, diagScene, diagCamera;
+let diagScene, diagCamera, diagRenderer, diagObj;
 
 const State = { bpi: 0, phase: "STABLE" };
 
-// --- Space Music (Improved) ---
-function initAudio() {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = audioCtx.currentTime;
-
-    spaceDrone = audioCtx.createOscillator();
-    const droneGain = audioCtx.createGain();
-    spaceDrone.type = 'sine';
-    spaceDrone.frequency.setValueAtTime(60, now);
-    droneGain.gain.setValueAtTime(0, now);
-    droneGain.gain.linearRampToValueAtTime(0.1, now + 3);
-    spaceDrone.connect(droneGain);
-    droneGain.connect(audioCtx.destination);
-    spaceDrone.start();
-
-    shimmerOsc = audioCtx.createOscillator();
-    const shimmerGain = audioCtx.createGain();
-    shimmerOsc.type = 'triangle';
-    shimmerOsc.frequency.setValueAtTime(220, now);
-    shimmerGain.gain.setValueAtTime(0, now);
-    shimmerGain.gain.linearRampToValueAtTime(0.03, now + 2);
-    shimmerOsc.connect(shimmerGain);
-    shimmerGain.connect(audioCtx.destination);
-    shimmerOsc.start();
-
-    window.splashGains = [droneGain, shimmerGain];
+function hideSplash() {
+    document.getElementById('splash-screen').style.opacity = '0';
+    setTimeout(() => document.getElementById('splash-screen').style.display = 'none', 1500);
+    initAudio();
 }
 
-function hideSplashScreen() {
-    document.getElementById('splash-screen').style.opacity = '0';
-    const now = audioCtx.currentTime;
-    window.splashGains.forEach(g => g.gain.linearRampToValueAtTime(0, now + 2));
-
+function initAudio() {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = audioCtx.createGain();
     mainOsc = audioCtx.createOscillator();
     mainOsc.connect(masterGain);
     masterGain.connect(audioCtx.destination);
+    masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
     mainOsc.start();
-    masterGain.gain.setValueAtTime(0, now);
-
-    setTimeout(() => document.getElementById('splash-screen').style.display = 'none', 2000);
 }
 
-window.addEventListener('mousedown', () => { if (!audioCtx) initAudio(); }, { once: true });
-
-// --- Matrix Rain (Ghostly & Dynamic) ---
+// --- Holographic Matrix Rain ---
 function initMatrix() {
     matrixCanvas = document.getElementById('matrix');
     matrixCtx = matrixCanvas.getContext('2d');
     matrixCanvas.width = window.innerWidth;
     matrixCanvas.height = window.innerHeight;
-    drops = Array(Math.floor(matrixCanvas.width/20)).fill(1);
+    drops = Array(Math.floor(matrixCanvas.width / 20)).fill(1);
 }
 
 function drawMatrix() {
-    matrixCtx.fillStyle = `rgba(0, 0, 0, ${0.02 + (State.bpi * 0.1)})`;
+    matrixCtx.fillStyle = `rgba(0, 0, 0, ${0.05 + State.bpi * 0.1})`;
     matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
-    matrixCtx.fillStyle = State.bpi > 0.8 ? '#f04' : `rgba(0, 242, 255, ${0.1 + State.bpi * 0.4})`;
+    matrixCtx.fillStyle = State.bpi > 0.8 ? '#f04' : '#00f2ff';
     matrixCtx.font = '15px monospace';
     drops.forEach((y, i) => {
         const text = String.fromCharCode(0x30A0 + Math.random() * 33);
         matrixCtx.fillText(text, i * 20, y * 20);
-        if (y * 20 > matrixCanvas.height && Math.random() > 0.995) drops[i] = 0;
-        drops[i] += 0.2 + (State.bpi * 2.5);
+        if (y * 20 > matrixCanvas.height && Math.random() > 0.98) drops[i] = 0;
+        drops[i] += 0.5 + State.bpi * 2;
     });
 }
 
-// --- Holographic Face (New Mesh Approach) ---
+// --- Advanced Hologram Face ---
 function init3D() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -161,75 +195,58 @@ function init3D() {
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("scene"), antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Create a sphere but reshape it into a feminine face "Hologram"
-    const geometry = new THREE.IcosahedronGeometry(1.5, 64);
-    const material = new THREE.ShaderMaterial({
-        uniforms: {
-            time: { value: 0 },
-            bpi: { value: 0 },
-            mouse: { value: new THREE.Vector2(0, 0) }
-        },
+    const geo = new THREE.IcosahedronGeometry(1.5, 40);
+    const mat = new THREE.ShaderMaterial({
+        uniforms: { time: { value: 0 }, bpi: { value: 0 } },
         vertexShader: `
-            uniform float time;
-            uniform float bpi;
-            uniform vec2 mouse;
-            varying vec3 vNormal;
+            uniform float time; uniform float bpi; varying vec3 vNormal;
             void main() {
                 vNormal = normal;
-                vec3 pos = position;
-                // Delicate movement
-                pos.x += sin(pos.y * 2.0 + time) * (0.05 + bpi * 0.3);
-                pos.z += cos(pos.x * 2.0 + time) * (0.05 + bpi * 0.3);
-                // Face shaping
-                pos.y *= 1.3;
-                if(pos.z > 0.0) pos.z += pow(1.0 - abs(pos.x), 2.0) * 0.4;
-                
-                gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                vec3 p = position;
+                p.y *= 1.4; // Face shape
+                p.z += pow(1.0 - abs(p.x), 2.0) * 0.3; // Nose area
+                p += normal * sin(p.y * 5.0 + time) * (0.02 + bpi * 0.15); // Liquid effect
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
             }
         `,
         fragmentShader: `
-            varying vec3 vNormal;
-            uniform float bpi;
-            uniform float time;
+            varying vec3 vNormal; uniform float time; uniform float bpi;
             void main() {
-                float intensity = pow(0.7 - dot(vNormal, vec3(0,0,1.0)), 4.0);
-                vec3 color = mix(vec3(0.0, 0.95, 1.0), vec3(1.0, 0.0, 0.2), bpi);
-                // Scanline effect on face
-                float scanline = sin(gl_FragCoord.y * 10.0 + time * 5.0) * 0.1 + 0.9;
-                gl_FragColor = vec4(color * intensity * scanline, intensity);
+                float rim = pow(1.0 - max(dot(vNormal, vec3(0,0,1)), 0.0), 3.0);
+                vec3 glow = mix(vec3(0.0, 0.9, 1.0), vec3(1.0, 0.0, 0.2), bpi);
+                float scan = sin(gl_FragCoord.y * 0.5 + time * 10.0) * 0.1 + 0.9;
+                gl_FragColor = vec4(glow * rim * scan, rim);
             }
         `,
-        transparent: true,
-        wireframe: true // Beautiful tech look
+        transparent: true, wireframe: true
     });
-
-    holoFace = new THREE.Mesh(geometry, material);
-    scene.add(holoFace);
+    holoMesh = new THREE.Mesh(geo, mat);
+    scene.add(holoMesh);
 
     initDiag();
     animate();
 }
 
 function initDiag() {
-    const canvas = document.getElementById('diagram-canvas');
+    const canvas = document.getElementById('diag-canvas');
     diagScene = new THREE.Scene();
     diagCamera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 10);
     diagCamera.position.z = 2;
     diagRenderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
     diagRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    diagMesh = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.2, 16, 100), new THREE.MeshBasicMaterial({ color: 0x00f2ff, wireframe: true }));
-    diagScene.add(diagMesh);
+    diagObj = new THREE.Mesh(new THREE.TorusKnotGeometry(0.5, 0.15, 100, 16), new THREE.MeshBasicMaterial({ color: 0x00f2ff, wireframe: true }));
+    diagScene.add(diagObj);
 }
 
-function executePressure() {
-    const v = document.getElementById('input').value.trim();
-    if(v === "0") { State.bpi = 0; }
-    else if(v) { State.bpi = /حب|سلام|جميل/.test(v) ? Math.max(0, State.bpi - 0.2) : Math.min(1, State.bpi + 0.15); }
+function execute() {
+    const val = document.getElementById('input').value.trim();
+    if(val === "0") { State.bpi = 0; }
+    else if(val) { State.bpi = /حب|جميل|هدوء/.test(val) ? Math.max(0, State.bpi - 0.2) : Math.min(1, State.bpi + 0.15); }
     
     document.getElementById('bpi-display').innerText = State.bpi.toFixed(2);
-    let color = State.bpi > 0.8 ? '#f04' : (State.bpi > 0.4 ? '#ffaa00' : '#00f2ff');
+    let color = State.bpi > 0.8 ? '#ff0044' : '#00f2ff';
     document.documentElement.style.setProperty('--primary', color);
-    document.getElementById('phase-text').innerText = State.bpi > 0.8 ? "CRITICAL FAILURE" : "STABLE CONSCIOUSNESS";
+    document.getElementById('state-text').innerText = State.bpi > 0.8 ? "CRITICAL" : "STABLE";
     document.getElementById('input').value = "";
 }
 
@@ -238,20 +255,23 @@ function animate() {
     const t = clock.getElapsedTime();
     drawMatrix();
 
-    // Hologram Interaction
-    holoFace.material.uniforms.time.value = t;
-    holoFace.material.uniforms.bpi.value = State.bpi;
-    holoFace.rotation.y = THREE.MathUtils.lerp(holoFace.rotation.y, mouse.x * 0.8, 0.05);
-    holoFace.rotation.x = THREE.MathUtils.lerp(holoFace.rotation.x, mouse.y * 0.4, 0.05);
+    holoMesh.material.uniforms.time.value = t;
+    holoMesh.material.uniforms.bpi.value = State.bpi;
+    holoMesh.rotation.y = THREE.MathUtils.lerp(holoMesh.rotation.y, mouse.x * 0.5, 0.05);
+    holoMesh.rotation.x = THREE.MathUtils.lerp(holoMesh.rotation.x, mouse.y * 0.3, 0.05);
 
-    diagMesh.rotation.z += 0.02 * (1 + State.bpi * 5);
+    diagObj.rotation.y += 0.02 * (1 + State.bpi * 5);
+    diagObj.material.color.setHex(State.bpi > 0.8 ? 0xff0044 : 0x00f2ff);
     diagRenderer.render(diagScene, diagCamera);
 
     if(masterGain) {
-        masterGain.gain.setTargetAtTime(State.bpi * 0.1, audioCtx.currentTime, 0.1);
+        masterGain.gain.setTargetAtTime(State.bpi * 0.05, audioCtx.currentTime, 0.1);
         mainOsc.frequency.setTargetAtTime(100 + State.bpi * 400, audioCtx.currentTime, 0.1);
     }
     renderer.render(scene, camera);
+    
+    // Clock
+    document.getElementById('clock').innerText = new Date().toLocaleTimeString();
 }
 
 window.addEventListener('mousemove', e => {
