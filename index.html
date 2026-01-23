@@ -2,31 +2,52 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>CECIT v6.0 – The Exploding Hologram</title>
+<title>CECIT v7.0 – Final Integrated System</title>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/build/three.min.js"></script>
 <style>
     :root { --primary: #00f2ff; --critical: #ff0044; }
     body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
     
+    /* Splash Screen Styling */
+    #splash-screen {
+        position: fixed; inset: 0; background: #000; z-index: 9999;
+        display: flex; flex-direction: column; justify-content: center; align-items: center;
+        transition: opacity 1.5s ease-in-out;
+    }
+    #splash-logo {
+        font-family: 'Courier New', monospace; font-size: 2.5em; font-weight: bold;
+        color: var(--primary); text-shadow: 0 0 30px var(--primary);
+        letter-spacing: 8px; animation: pulse 3s infinite; text-align: center;
+    }
+    #splash-subtitle { color: rgba(0, 242, 255, 0.4); margin-top: 15px; letter-spacing: 2px; font-size: 0.9em; }
+
+    /* Main UI Elements */
     #top-bar { position: fixed; top: 0; width: 100%; height: 50px; background: rgba(0, 242, 255, 0.05); border-bottom: 1px solid rgba(0, 242, 255, 0.2); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-sizing: border-box; z-index: 100; font-size: 12px; letter-spacing: 2px; }
-    #main-container { position: relative; z-index: 10; display: flex; justify-content: space-between; padding: 70px 40px; height: 100vh; box-sizing: border-box; pointer-events: none; }
-    .panel { width: 320px; background: rgba(0, 5, 15, 0.9); border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 8px; padding: 20px; pointer-events: auto; backdrop-filter: blur(15px); display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0,0,0,1); }
+    #main-container { position: relative; z-index: 10; display: flex; justify-content: space-between; padding: 80px 40px; height: 100vh; box-sizing: border-box; pointer-events: none; }
+    .panel { width: 320px; background: rgba(0, 5, 15, 0.9); border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 8px; padding: 20px; pointer-events: auto; backdrop-filter: blur(15px); box-shadow: 0 0 50px rgba(0,0,0,1); }
     
     .label { font-size: 10px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
     #bpi-display { font-size: 3em; font-family: monospace; color: var(--primary); }
     textarea { width: 100%; background: #000; border: 1px solid #222; color: var(--primary); padding: 12px; border-radius: 4px; font-family: monospace; resize: none; outline: none; margin-top: 10px; }
     button { width: 100%; background: var(--primary); color: #000; border: none; padding: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s; }
-    button:hover { background: #fff; box-shadow: 0 0 15px var(--primary); }
-
+    
     canvas#scene { position: fixed; top: 0; left: 0; z-index: 1; }
-    #explosion-overlay { position: fixed; inset: 0; background: white; opacity: 0; pointer-events: none; z-index: 1000; transition: opacity 0.1s; }
+    #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 1000; }
+    
+    @keyframes pulse { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
 </style>
 </head>
 <body>
 
-<div id="explosion-overlay"></div>
+<div id="splash-screen">
+    <div id="splash-logo">AMMAR AL-MANTAFJI</div>
+    <div id="splash-subtitle">NEURAL LINK INITIALIZING...</div>
+    <button id="start-btn" style="width: auto; padding: 15px 60px; margin-top: 40px; background: transparent; color: var(--primary); border: 1px solid var(--primary);" onclick="startSystem()">CONNECT TO ENTITY</button>
+</div>
+
+<div id="flash"></div>
 <div id="top-bar">
-    <div>INTERFACE: <span id="status-tag">STABLE</span></div>
+    <div>ENTITY STATUS: <span id="status-tag">SYNCHRONIZING</span></div>
     <div id="clock">00:00:00</div>
 </div>
 
@@ -34,29 +55,52 @@
 
 <div id="main-container">
     <div class="panel">
-        <div class="label">Cognitive Load</div>
+        <div class="label">Cognitive Pressure</div>
         <div id="bpi-display">0.00</div>
-        <div id="state-text" style="color: var(--primary); font-size: 12px; margin-top: 5px;">SYSTEM NORMAL</div>
-        <div style="margin-top: 20px;" class="label">Core Stability</div>
-        <div id="diag-container" style="height:100px; background:rgba(0,0,0,0.5); border-radius:4px;"></div>
+        <div id="state-text" style="color: var(--primary); font-size: 12px; margin-top: 5px;">STABLE</div>
+        <div style="margin-top: 20px;" class="label">Neural Core Load</div>
+        <div style="height:4px; background:#111; width:100%; border-radius:2px; overflow:hidden;">
+            <div id="load-bar" style="height:100%; width:0%; background:var(--primary); transition:0.3s;"></div>
+        </div>
     </div>
 
     <div class="panel">
-        <div class="label">Input Stream</div>
-        <textarea id="input" rows="5" placeholder="اكتب '0' للرست أو خاطب الكيان..."></textarea>
-        <button onclick="execute()">EXECUTE</button>
-        <div id="mood-text" style="font-size: 11px; margin-top: 15px; opacity: 0.4;">Monitoring Neural Synapse...</div>
+        <div class="label">Neural Command</div>
+        <textarea id="input" rows="5" placeholder="أدخل البيانات (0 للإصلاح)..."></textarea>
+        <button onclick="execute()">EXECUTE PROTOCOL</button>
+        <div id="mood-text" style="font-size: 11px; margin-top: 15px; opacity: 0.3; text-align: center;">Waiting for synapse...</div>
     </div>
 </div>
 
 <script>
-let scene, camera, renderer, holoMesh, clock;
-let audioCtx, masterGain, mainOsc, noiseNode;
+let scene, camera, renderer, holoMesh, sparks, clock;
+let audioCtx, masterGain, mainOsc, spaceDrone;
 let mouse = { x: 0, y: 0 };
-const State = { bpi: 0, isExploded: false };
+const State = { bpi: 0, isExploded: false, explosionVal: 0 };
 
+// --- Audio Engine (Splash + Main) ---
 function initAudio() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Space Ambient Drone for Splash
+    spaceDrone = audioCtx.createOscillator();
+    const droneGain = audioCtx.createGain();
+    spaceDrone.type = 'sawtooth';
+    spaceDrone.frequency.setValueAtTime(55, audioCtx.currentTime); 
+    
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(200, audioCtx.currentTime);
+
+    droneGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    spaceDrone.connect(filter);
+    filter.connect(droneGain);
+    droneGain.connect(audioCtx.destination);
+    spaceDrone.start();
+    
+    window.droneGain = droneGain;
+
+    // Main System Oscillator
     masterGain = audioCtx.createGain();
     mainOsc = audioCtx.createOscillator();
     mainOsc.connect(masterGain);
@@ -65,19 +109,26 @@ function initAudio() {
     mainOsc.start();
 }
 
+function startSystem() {
+    if(!audioCtx) initAudio();
+    document.getElementById('splash-screen').style.opacity = '0';
+    window.droneGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 2);
+    setTimeout(() => {
+        document.getElementById('splash-screen').style.display = 'none';
+    }, 1500);
+}
+
 function triggerExplosionSound() {
-    const bufferSize = audioCtx.sampleRate * 0.5;
+    const noise = audioCtx.createBufferSource();
+    const bufferSize = audioCtx.sampleRate * 1.0;
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
-    const noise = audioCtx.createBufferSource();
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
     noise.buffer = buffer;
-    const noiseGain = audioCtx.createGain();
-    noiseGain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    noiseGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-    noise.connect(noiseGain);
-    noiseGain.connect(audioCtx.destination);
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+    noise.connect(g); g.connect(audioCtx.destination);
     noise.start();
 }
 
@@ -89,23 +140,18 @@ function init3D() {
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("scene"), antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    const geo = new THREE.IcosahedronGeometry(1.5, 40);
+    // Hologram Mesh
+    const geo = new THREE.IcosahedronGeometry(1.5, 45);
     const mat = new THREE.ShaderMaterial({
-        uniforms: { 
-            time: { value: 0 }, 
-            bpi: { value: 0 },
-            explosion: { value: 0 } 
-        },
+        uniforms: { time: { value: 0 }, bpi: { value: 0 }, explosion: { value: 0 } },
         vertexShader: `
             uniform float time; uniform float bpi; uniform float explosion;
             varying vec3 vNormal;
             void main() {
                 vNormal = normal;
                 vec3 p = position;
-                // Explode logic: move vertices outwards based on normal
                 p += normal * explosion * 5.0; 
-                p.y *= 1.4; 
-                p.z += pow(1.0 - abs(p.x), 2.0) * 0.3;
+                p.y *= 1.4; p.z += pow(1.0 - abs(p.x), 2.0) * 0.3;
                 if(explosion < 0.1) p += normal * sin(p.y * 5.0 + time) * (0.02 + bpi * 0.1);
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
             }
@@ -114,67 +160,66 @@ function init3D() {
             varying vec3 vNormal; uniform float time; uniform float bpi; uniform float explosion;
             void main() {
                 float rim = pow(1.0 - max(dot(vNormal, vec3(0,0,1)), 0.0), 3.0);
-                vec3 color = mix(vec3(0.0, 0.9, 1.0), vec3(1.0, 0.0, 0.2), bpi);
-                if(explosion > 0.1) color = vec3(1.0, 1.0, 1.0);
-                gl_FragColor = vec4(color * rim, rim * (1.0 - explosion));
+                vec3 color = mix(vec3(0.0, 0.95, 1.0), vec3(1.0, 0.0, 0.3), bpi);
+                if(explosion > 0.5) color = vec3(1.0);
+                gl_FragColor = vec4(color * rim, rim * (1.1 - explosion));
             }
         `,
         transparent: true, wireframe: true
     });
     holoMesh = new THREE.Mesh(geo, mat);
     scene.add(holoMesh);
+
+    // Sparks
+    const sGeo = new THREE.BufferGeometry();
+    const sPos = new Float32Array(1000 * 3);
+    for(let i=0; i<3000; i++) sPos[i] = (Math.random()-0.5) * 12;
+    sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+    sparks = new THREE.Points(sGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.02, transparent: true, opacity: 0 }));
+    scene.add(sparks);
+
     animate();
 }
 
 function execute() {
-    if (!audioCtx) initAudio();
     const val = document.getElementById('input').value.trim();
-    
-    if (val === "0") {
-        State.bpi = 0;
-        State.isExploded = false;
-    } else if (val) {
-        State.bpi = /حب|جميل|هدوء/.test(val) ? Math.max(0, State.bpi - 0.2) : Math.min(1.1, State.bpi + 0.2);
-    }
+    if (val === "0") { State.bpi = 0; State.isExploded = false; }
+    else if (val) { State.bpi = /حب|جميل|سلام/.test(val) ? Math.max(0, State.bpi - 0.2) : Math.min(1.1, State.bpi + 0.25); }
 
     if (State.bpi >= 1.0 && !State.isExploded) {
         State.isExploded = true;
         triggerExplosionSound();
-        document.getElementById('explosion-overlay').style.opacity = '1';
-        setTimeout(() => document.getElementById('explosion-overlay').style.opacity = '0', 100);
+        document.getElementById('flash').style.opacity = '1';
+        setTimeout(() => document.getElementById('flash').style.opacity = '0', 150);
     }
-
     updateUI();
     document.getElementById('input').value = "";
 }
 
 function updateUI() {
     document.getElementById('bpi-display').innerText = Math.min(State.bpi, 1).toFixed(2);
+    document.getElementById('load-bar').style.width = (Math.min(State.bpi, 1) * 100) + "%";
     let isCrit = State.bpi > 0.9;
     document.documentElement.style.setProperty('--primary', isCrit ? '#f04' : '#00f2ff');
-    document.getElementById('status-tag').innerText = isCrit ? "CRITICAL" : "ACTIVE";
-    document.getElementById('state-text').innerText = isCrit ? "CORE RUPTURE IMMINENT" : "SYSTEM NORMAL";
+    document.getElementById('status-tag').innerText = isCrit ? "SYSTEM RUPTURE" : "SYNCHRONIZED";
 }
 
 function animate() {
     requestAnimationFrame(animate);
     const t = clock.getElapsedTime();
+    let targetExp = State.isExploded ? 1.0 : 0.0;
+    State.explosionVal = THREE.MathUtils.lerp(State.explosionVal, targetExp, 0.06);
     
-    // Smooth transition for explosion value
-    let targetExplosion = State.isExploded ? 1.0 : 0.0;
-    holoMesh.material.uniforms.explosion.value = THREE.MathUtils.lerp(holoMesh.material.uniforms.explosion.value, targetExplosion, 0.05);
+    holoMesh.material.uniforms.explosion.value = State.explosionVal;
     holoMesh.material.uniforms.time.value = t;
     holoMesh.material.uniforms.bpi.value = Math.min(State.bpi, 1.0);
 
-    holoMesh.rotation.y += 0.005;
-    if(!State.isExploded) {
-        holoMesh.rotation.y = THREE.MathUtils.lerp(holoMesh.rotation.y, mouse.x * 0.5, 0.05);
-        holoMesh.rotation.x = THREE.MathUtils.lerp(holoMesh.rotation.x, mouse.y * 0.3, 0.05);
-    }
-
+    sparks.material.opacity = State.explosionVal;
+    holoMesh.rotation.y += 0.005 + (State.explosionVal * 0.1);
+    
     if(masterGain) {
         masterGain.gain.setTargetAtTime(Math.min(State.bpi, 1) * 0.05, audioCtx.currentTime, 0.1);
-        mainOsc.frequency.setTargetAtTime(100 + State.bpi * 400, audioCtx.currentTime, 0.1);
+        mainOsc.frequency.setTargetAtTime(60 + State.bpi * 400, audioCtx.currentTime, 0.1);
     }
     renderer.render(scene, camera);
     document.getElementById('clock').innerText = new Date().toLocaleTimeString();
