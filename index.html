@@ -2,105 +2,111 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>CECIT v7.0 – Final Integrated System</title>
+<title>SINGULARITY v9.5 – Black Hole Event</title>
 <script src="https://cdn.jsdelivr.net/npm/three@0.152/build/three.min.js"></script>
 <style>
-    :root { --primary: #00f2ff; --critical: #ff0044; }
+    :root { --primary: #00f2ff; --event-horizon: #ff4400; }
     body { margin: 0; background: #000; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
     
-    /* Splash Screen Styling */
     #splash-screen {
         position: fixed; inset: 0; background: #000; z-index: 9999;
         display: flex; flex-direction: column; justify-content: center; align-items: center;
         transition: opacity 1.5s ease-in-out;
     }
     #splash-logo {
-        font-family: 'Courier New', monospace; font-size: 2.5em; font-weight: bold;
-        color: var(--primary); text-shadow: 0 0 30px var(--primary);
-        letter-spacing: 8px; animation: pulse 3s infinite; text-align: center;
+        font-family: 'Courier New', monospace; font-size: 2.2em; font-weight: bold;
+        color: var(--primary); text-shadow: 0 0 20px var(--primary); letter-spacing: 5px;
     }
-    #splash-subtitle { color: rgba(0, 242, 255, 0.4); margin-top: 15px; letter-spacing: 2px; font-size: 0.9em; }
 
-    /* Main UI Elements */
-    #top-bar { position: fixed; top: 0; width: 100%; height: 50px; background: rgba(0, 242, 255, 0.05); border-bottom: 1px solid rgba(0, 242, 255, 0.2); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; box-sizing: border-box; z-index: 100; font-size: 12px; letter-spacing: 2px; }
-    #main-container { position: relative; z-index: 10; display: flex; justify-content: space-between; padding: 80px 40px; height: 100vh; box-sizing: border-box; pointer-events: none; }
-    .panel { width: 320px; background: rgba(0, 5, 15, 0.9); border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 8px; padding: 20px; pointer-events: auto; backdrop-filter: blur(15px); box-shadow: 0 0 50px rgba(0,0,0,1); }
+    #top-bar { 
+        position: fixed; top: 0; width: 100%; height: 50px; 
+        background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+        display: flex; align-items: center; justify-content: space-between; 
+        padding: 0 30px; box-sizing: border-box; z-index: 100; font-size: 11px;
+    }
+
+    #ui-wrapper {
+        position: relative; z-index: 10; display: flex; flex-direction: column;
+        justify-content: space-between; height: 100vh; padding: 70px 40px 40px 40px;
+        box-sizing: border-box; pointer-events: none;
+    }
+
+    .panel { 
+        width: 400px; background: rgba(0, 0, 0, 0.8); border: 1px solid rgba(255, 255, 255, 0.1); 
+        border-radius: 8px; padding: 20px; pointer-events: auto; backdrop-filter: blur(10px);
+    }
+
+    .label { font-size: 10px; color: #666; text-transform: uppercase; margin-bottom: 8px; }
+    #bpi-val { font-size: 3.5em; font-family: 'Courier New'; color: var(--primary); line-height: 1; }
     
-    .label { font-size: 10px; color: #555; text-transform: uppercase; margin-bottom: 5px; }
-    #bpi-display { font-size: 3em; font-family: monospace; color: var(--primary); }
-    textarea { width: 100%; background: #000; border: 1px solid #222; color: var(--primary); padding: 12px; border-radius: 4px; font-family: monospace; resize: none; outline: none; margin-top: 10px; }
-    button { width: 100%; background: var(--primary); color: #000; border: none; padding: 12px; font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s; }
-    
+    #diag-container { width: 100%; height: 180px; margin: 15px 0; background: #050505; border: 1px solid #151515; }
+
+    textarea { 
+        width: 100%; background: #080808; border: 1px solid #222; color: var(--primary); 
+        padding: 12px; border-radius: 4px; font-family: monospace; resize: none; outline: none;
+    }
+    button { 
+        width: 100%; background: var(--primary); color: #000; border: none; padding: 12px; 
+        font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s;
+    }
+
     canvas#scene { position: fixed; top: 0; left: 0; z-index: 1; }
     #flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 1000; }
-    
-    @keyframes pulse { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
 </style>
 </head>
 <body>
 
 <div id="splash-screen">
     <div id="splash-logo">AMMAR AL-MANTAFJI</div>
-    <div id="splash-subtitle">NEURAL LINK INITIALIZING...</div>
-    <button id="start-btn" style="width: auto; padding: 15px 60px; margin-top: 40px; background: transparent; color: var(--primary); border: 1px solid var(--primary);" onclick="startSystem()">CONNECT TO ENTITY</button>
+    <div style="color:#444; margin-top:10px; letter-spacing:2px;">SINGULARITY ENGAGEMENT PROTOCOL V9.5</div>
+    <button onclick="startSystem()">CONNECT TO SINGULARITY</button>
 </div>
 
 <div id="flash"></div>
 <div id="top-bar">
-    <div>ENTITY STATUS: <span id="status-tag">SYNCHRONIZING</span></div>
+    <div>SYSTEM Status:</div>
+    <div>Status tag: <span id="status-tag" style="color:var(--primary)">STABLE</span> | ORBIT</div>
     <div id="clock">00:00:00</div>
 </div>
 
 <canvas id="scene"></canvas>
 
-<div id="main-container">
-    <div class="panel">
-        <div class="label">Cognitive Pressure</div>
-        <div id="bpi-display">0.00</div>
-        <div id="state-text" style="color: var(--primary); font-size: 12px; margin-top: 5px;">STABLE</div>
-        <div style="margin-top: 20px;" class="label">Neural Core Load</div>
-        <div style="height:4px; background:#111; width:100%; border-radius:2px; overflow:hidden;">
-            <div id="load-bar" style="height:100%; width:0%; background:var(--primary); transition:0.3s;"></div>
-        </div>
+<div id="ui-wrapper">
+    <div id="top-stats">
+        <div class="label">Gravitational Pressure (BPI)</div>
+        <div id="bpi-val">0.00</div>
+        <div id="state-text" style="color: var(--primary); font-size: 12px; margin-top: 5px;">NORMAL ACCRETION</div>
     </div>
 
-    <div class="panel">
-        <div class="label">Neural Command</div>
-        <textarea id="input" rows="5" placeholder="أدخل البيانات (0 للإصلاح)..."></textarea>
-        <button onclick="execute()">EXECUTE PROTOCOL</button>
-        <div id="mood-text" style="font-size: 11px; margin-top: 15px; opacity: 0.3; text-align: center;">Waiting for synapse...</div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%;">
+        <div class="panel">
+            <div class="label">Spacetime Curvature (Diagram)</div>
+            <div id="diag-container"></div>
+            <div id="mood-text" style="font-size: 11px; color:#444;">Observing spacetime curvive...</div>
+        </div>
+
+        <div class="panel">
+            <div class="label">Neural Command</div>
+            <textarea id="input" rows="4" placeholder="Input protocol (0 to reset)..."></textarea>
+            <button onclick="execute()">INITIATE PROTOCOL</button>
+        </div>
     </div>
 </div>
 
 <script>
-let scene, camera, renderer, holoMesh, sparks, clock;
-let audioCtx, masterGain, mainOsc, spaceDrone;
-let mouse = { x: 0, y: 0 };
+let scene, camera, renderer, blackHole, accretionDisk, smokeParticles, textParticles = [], clock;
+let diagScene, diagCamera, diagRenderer, spacetimeGrid;
+let audioCtx, masterGain, mainOsc;
 const State = { bpi: 0, isExploded: false, explosionVal: 0 };
 
-// --- Audio Engine (Splash + Main) ---
+function startSystem() {
+    initAudio();
+    document.getElementById('splash-screen').style.opacity = '0';
+    setTimeout(() => document.getElementById('splash-screen').style.display = 'none', 1500);
+}
+
 function initAudio() {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    // Space Ambient Drone for Splash
-    spaceDrone = audioCtx.createOscillator();
-    const droneGain = audioCtx.createGain();
-    spaceDrone.type = 'sawtooth';
-    spaceDrone.frequency.setValueAtTime(55, audioCtx.currentTime); 
-    
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(200, audioCtx.currentTime);
-
-    droneGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-    spaceDrone.connect(filter);
-    filter.connect(droneGain);
-    droneGain.connect(audioCtx.destination);
-    spaceDrone.start();
-    
-    window.droneGain = droneGain;
-
-    // Main System Oscillator
     masterGain = audioCtx.createGain();
     mainOsc = audioCtx.createOscillator();
     mainOsc.connect(masterGain);
@@ -109,126 +115,154 @@ function initAudio() {
     mainOsc.start();
 }
 
-function startSystem() {
-    if(!audioCtx) initAudio();
-    document.getElementById('splash-screen').style.opacity = '0';
-    window.droneGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 2);
-    setTimeout(() => {
-        document.getElementById('splash-screen').style.display = 'none';
-    }, 1500);
-}
-
-function triggerExplosionSound() {
-    const noise = audioCtx.createBufferSource();
-    const bufferSize = audioCtx.sampleRate * 1.0;
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
-    noise.buffer = buffer;
-    const g = audioCtx.createGain();
-    g.gain.setValueAtTime(0.5, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
-    noise.connect(g); g.connect(audioCtx.destination);
-    noise.start();
+function createTextParticle(text) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 256; canvas.height = 64;
+    ctx.font = 'bold 30px Arial';
+    ctx.fillStyle = '#ff4400';
+    ctx.fillText(text, 10, 40);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, opacity: 0.8 });
+    const sprite = new THREE.Sprite(spriteMat);
+    
+    sprite.position.set((Math.random()-0.5)*10, (Math.random()-0.5)*10, (Math.random()-0.5)*5);
+    sprite.scale.set(1.5, 0.4, 1);
+    scene.add(sprite);
+    textParticles.push({ sprite, life: 1.0 });
 }
 
 function init3D() {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 5;
+    camera.position.set(0, 1, 10);
     clock = new THREE.Clock();
+    
     renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("scene"), antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Hologram Mesh
-    const geo = new THREE.IcosahedronGeometry(1.5, 45);
-    const mat = new THREE.ShaderMaterial({
+    // 1. Black Hole
+    const bhGeo = new THREE.SphereGeometry(1.2, 64, 64);
+    blackHole = new THREE.Mesh(bhGeo, new THREE.MeshBasicMaterial({ color: 0x000000 }));
+    scene.add(blackHole);
+
+    // 2. Accretion Disk
+    const ringGeo = new THREE.TorusGeometry(3, 0.6, 2, 100);
+    const ringMat = new THREE.ShaderMaterial({
         uniforms: { time: { value: 0 }, bpi: { value: 0 }, explosion: { value: 0 } },
         vertexShader: `
-            uniform float time; uniform float bpi; uniform float explosion;
-            varying vec3 vNormal;
+            varying vec2 vUv; uniform float time;
             void main() {
-                vNormal = normal;
+                vUv = uv;
                 vec3 p = position;
-                p += normal * explosion * 5.0; 
-                p.y *= 1.4; p.z += pow(1.0 - abs(p.x), 2.0) * 0.3;
-                if(explosion < 0.1) p += normal * sin(p.y * 5.0 + time) * (0.02 + bpi * 0.1);
+                p.z += sin(p.x * 2.0 + time) * 0.3;
                 gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
             }
         `,
         fragmentShader: `
-            varying vec3 vNormal; uniform float time; uniform float bpi; uniform float explosion;
+            varying vec2 vUv; uniform float time; uniform float bpi; uniform float explosion;
             void main() {
-                float rim = pow(1.0 - max(dot(vNormal, vec3(0,0,1)), 0.0), 3.0);
-                vec3 color = mix(vec3(0.0, 0.95, 1.0), vec3(1.0, 0.0, 0.3), bpi);
-                if(explosion > 0.5) color = vec3(1.0);
-                gl_FragColor = vec4(color * rim, rim * (1.1 - explosion));
+                float pulse = sin(vUv.x * 40.0 - time * 5.0) * 0.5 + 0.5;
+                vec3 color = mix(vec3(0.0, 0.8, 1.0), vec3(1.0, 0.3, 0.0), bpi);
+                if(explosion > 0.5) color = vec3(1.0, 0.8, 0.5);
+                gl_FragColor = vec4(color, (0.3 + pulse * 0.7) * (1.0 - explosion));
             }
         `,
-        transparent: true, wireframe: true
+        transparent: true, side: THREE.DoubleSide, wireframe: true
     });
-    holoMesh = new THREE.Mesh(geo, mat);
-    scene.add(holoMesh);
+    accretionDisk = new THREE.Mesh(ringGeo, ringMat);
+    accretionDisk.rotation.x = Math.PI / 2.2;
+    scene.add(accretionDisk);
 
-    // Sparks
-    const sGeo = new THREE.BufferGeometry();
-    const sPos = new Float32Array(1000 * 3);
-    for(let i=0; i<3000; i++) sPos[i] = (Math.random()-0.5) * 12;
-    sGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
-    sparks = new THREE.Points(sGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.02, transparent: true, opacity: 0 }));
-    scene.add(sparks);
+    // 3. Smoke/Nebula Effect
+    const smokeGeo = new THREE.SphereGeometry(4, 32, 32);
+    const smokeMat = new THREE.MeshBasicMaterial({ color: 0x222222, transparent: true, opacity: 0, wireframe: true });
+    smokeParticles = new THREE.Mesh(smokeGeo, smokeMat);
+    scene.add(smokeParticles);
 
+    initDiag();
     animate();
+}
+
+function initDiag() {
+    const container = document.getElementById('diag-container');
+    diagScene = new THREE.Scene();
+    diagCamera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    diagCamera.position.set(2, 2, 5);
+    diagCamera.lookAt(0,0,0);
+    diagRenderer = new THREE.WebGLRenderer({ alpha: true });
+    diagRenderer.setSize(container.clientWidth, container.clientHeight);
+    container.appendChild(diagRenderer.domElement);
+
+    const gridGeo = new THREE.PlaneGeometry(6, 6, 25, 25);
+    spacetimeGrid = new THREE.Mesh(gridGeo, new THREE.MeshBasicMaterial({ color: 0x00f2ff, wireframe: true, transparent: true, opacity: 0.3 }));
+    spacetimeGrid.rotation.x = -Math.PI / 2.5;
+    diagScene.add(spacetimeGrid);
 }
 
 function execute() {
     const val = document.getElementById('input').value.trim();
     if (val === "0") { State.bpi = 0; State.isExploded = false; }
-    else if (val) { State.bpi = /حب|جميل|سلام/.test(val) ? Math.max(0, State.bpi - 0.2) : Math.min(1.1, State.bpi + 0.25); }
+    else if (val) { 
+        State.bpi = Math.min(1.1, State.bpi + 0.2); 
+        if(State.bpi > 0.8) createTextParticle(val);
+    }
 
     if (State.bpi >= 1.0 && !State.isExploded) {
         State.isExploded = true;
-        triggerExplosionSound();
         document.getElementById('flash').style.opacity = '1';
-        setTimeout(() => document.getElementById('flash').style.opacity = '0', 150);
+        setTimeout(() => document.getElementById('flash').style.opacity = '0', 200);
     }
     updateUI();
     document.getElementById('input').value = "";
 }
 
 function updateUI() {
-    document.getElementById('bpi-display').innerText = Math.min(State.bpi, 1).toFixed(2);
-    document.getElementById('load-bar').style.width = (Math.min(State.bpi, 1) * 100) + "%";
+    document.getElementById('bpi-val').innerText = Math.min(State.bpi, 1.0).toFixed(2);
     let isCrit = State.bpi > 0.9;
-    document.documentElement.style.setProperty('--primary', isCrit ? '#f04' : '#00f2ff');
-    document.getElementById('status-tag').innerText = isCrit ? "SYSTEM RUPTURE" : "SYNCHRONIZED";
+    document.documentElement.style.setProperty('--primary', isCrit ? '#ff4400' : '#00f2ff');
+    document.getElementById('status-tag').innerText = isCrit ? "EVENT HORIZON" : "STABLE";
+    document.getElementById('state-text').innerText = isCrit ? "GRAVITATIONAL COLLAPSE" : "NORMAL ACCRETION";
 }
 
 function animate() {
     requestAnimationFrame(animate);
     const t = clock.getElapsedTime();
-    let targetExp = State.isExploded ? 1.0 : 0.0;
-    State.explosionVal = THREE.MathUtils.lerp(State.explosionVal, targetExp, 0.06);
+    State.explosionVal = THREE.MathUtils.lerp(State.explosionVal, State.isExploded ? 1.0 : 0.0, 0.04);
     
-    holoMesh.material.uniforms.explosion.value = State.explosionVal;
-    holoMesh.material.uniforms.time.value = t;
-    holoMesh.material.uniforms.bpi.value = Math.min(State.bpi, 1.0);
+    // Animate Black Hole & Disk
+    blackHole.scale.setScalar(1 + State.bpi * 0.3 + State.explosionVal * 4);
+    accretionDisk.material.uniforms.time.value = t;
+    accretionDisk.material.uniforms.bpi.value = State.bpi;
+    accretionDisk.material.uniforms.explosion.value = State.explosionVal;
+    accretionDisk.rotation.z -= 0.02 * (1 + State.bpi * 3);
+    
+    // Smoke effect
+    smokeParticles.material.opacity = State.bpi * 0.2 + State.explosionVal * 0.5;
+    smokeParticles.rotation.y += 0.002;
 
-    sparks.material.opacity = State.explosionVal;
-    holoMesh.rotation.y += 0.005 + (State.explosionVal * 0.1);
-    
-    if(masterGain) {
-        masterGain.gain.setTargetAtTime(Math.min(State.bpi, 1) * 0.05, audioCtx.currentTime, 0.1);
-        mainOsc.frequency.setTargetAtTime(60 + State.bpi * 400, audioCtx.currentTime, 0.1);
+    // Text Absorption
+    textParticles.forEach((p, i) => {
+        p.sprite.position.lerp(new THREE.Vector3(0,0,0), 0.02);
+        p.sprite.scale.multiplyScalar(0.98);
+        p.life -= 0.01;
+        if(p.life <= 0) { scene.remove(p.sprite); textParticles.splice(i, 1); }
+    });
+
+    // Spacetime Grid
+    const verts = spacetimeGrid.geometry.attributes.position.array;
+    for(let i=0; i<verts.length; i+=3) {
+        let dist = Math.sqrt(verts[i]*verts[i] + verts[i+1]*verts[i+1]);
+        verts[i+2] = -Math.exp(-dist * 0.8) * (State.bpi * 3.5);
     }
+    spacetimeGrid.geometry.attributes.position.needsUpdate = true;
+    spacetimeGrid.material.color.setHex(State.bpi > 0.9 ? 0xff4400 : 0x00f2ff);
+
     renderer.render(scene, camera);
+    diagRenderer.render(diagScene, diagCamera);
     document.getElementById('clock').innerText = new Date().toLocaleTimeString();
 }
-
-window.addEventListener('mousemove', e => {
-    mouse.x = (e.clientX / window.innerWidth) - 0.5;
-    mouse.y = (e.clientY / window.innerHeight) - 0.5;
-});
 
 init3D();
 </script>
